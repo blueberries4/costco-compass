@@ -1,0 +1,69 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:#E2DCD4;font-family:'Plus Jakarta Sans',sans-serif;}
+::-webkit-scrollbar{display:none;}
+
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes fadeIn {
+  from{opacity:0;}
+  to{opacity:1;}
+}
+@keyframes slideUp {
+  from{opacity:0;transform:translateY(46px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes fillBar {
+  from{width:0}
+  to{}
+}
+@keyframes glow {
+  0%,100%{box-shadow:0 0 16px rgba(217,43,58,0.25);}
+  50%{box-shadow:0 0 30px rgba(217,43,58,0.48);}
+}
+@keyframes pulse {
+  0%,100%{opacity:1;}
+  50%{opacity:0.6;}
+}
+
+.tap{
+  transition:transform 0.11s cubic-bezier(.34,1.5,.64,1),opacity 0.1s;
+  cursor:pointer;
+}
+.tap:active{
+  transform:scale(0.93);
+  opacity:0.75;
+}
+
+.lift{
+  transition:transform 0.16s cubic-bezier(.34,1.4,.64,1),box-shadow 0.16s;
+}
+.lift:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 22px rgba(0,0,0,0.1)!important;
+}
+
+.fbar{
+  animation:fillBar 0.82s cubic-bezier(.34,1.1,.64,1) both;
+}
+.glow{
+  animation:glow 2.4s ease-in-out infinite;
+}
+.pulse{
+  animation:pulse 2s ease-in-out infinite;
+}
+
+input:focus,textarea:focus,select:focus{
+  outline:none;
+}
+input[type=number]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+}
+input[type=checkbox]{
+  accent-color:#D92B3A;
+  width:17px;
+  height:17px;
+  cursor:pointer;
+  flex-shrink:0;
+}

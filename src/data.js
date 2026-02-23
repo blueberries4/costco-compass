@@ -1,0 +1,51 @@
+export const SAMPLE_TRIPS = [
+  {id:1, date:"2025-10-04", notes:"Big monthly stock-up", addedBy:"You", tripScore:82, items:[
+    {id:11,name:"Kirkland Mixed Nuts",    category:"Groceries",  amount:24.99,planned:true, kirkland:true, retailPrice:34.00},
+    {id:12,name:"Gas Fill-Up",            category:"Gas",        amount:58.30,planned:true, kirkland:false,retailPrice:null},
+    {id:13,name:"Tide Pods 152ct",        category:"Household",  amount:29.99,planned:true, kirkland:false,retailPrice:38.00},
+    {id:14,name:"Atlantic Salmon",        category:"Groceries",  amount:34.99,planned:true, kirkland:false,retailPrice:44.00},
+    {id:15,name:"Kirkland Olive Oil 2L",  category:"Groceries",  amount:19.99,planned:false,kirkland:true, retailPrice:28.00},
+    {id:16,name:"Snack Variety Pack",     category:"Groceries",  amount:16.99,planned:false,kirkland:false,retailPrice:null},
+  ]},
+  {id:2, date:"2025-11-01", notes:"Gas + essentials", addedBy:"Partner", tripScore:68, items:[
+    {id:21,name:"Gas Fill-Up",            category:"Gas",        amount:55.10,planned:true, kirkland:false,retailPrice:null},
+    {id:22,name:"Organic Chicken Breast", category:"Groceries",  amount:22.49,planned:true, kirkland:false,retailPrice:30.00},
+    {id:23,name:"Bounty Paper Towels",    category:"Household",  amount:27.99,planned:true, kirkland:false,retailPrice:36.00},
+    {id:24,name:"AirPods Pro",            category:"Electronics",amount:149.99,planned:false,kirkland:false,retailPrice:249.00},
+    {id:25,name:"Kirkland Coffee 3lb",    category:"Groceries",  amount:39.99,planned:false,kirkland:true, retailPrice:55.00},
+  ]},
+  {id:3, date:"2025-12-06", notes:"Holiday prep", addedBy:"You", tripScore:71, items:[
+    {id:31,name:"Kirkland Vitamins",      category:"Health",     amount:31.99,planned:true, kirkland:true, retailPrice:44.00},
+    {id:32,name:"Gas Fill-Up",            category:"Gas",        amount:52.80,planned:true, kirkland:false,retailPrice:null},
+    {id:33,name:"Prime Ribeye 4-Pack",    category:"Groceries",  amount:47.99,planned:true, kirkland:false,retailPrice:68.00},
+    {id:34,name:"Levi's Jeans 2-Pack",    category:"Clothing",   amount:39.99,planned:false,kirkland:false,retailPrice:60.00},
+    {id:35,name:"Kirkland Mixed Nuts",    category:"Groceries",  amount:24.99,planned:true, kirkland:true, retailPrice:34.00},
+    {id:36,name:"Kirkland Olive Oil 2L",  category:"Groceries",  amount:19.99,planned:false,kirkland:true, retailPrice:28.00},
+    {id:37,name:"Croissants 12ct",        category:"Bakery",     amount:8.99, planned:false,kirkland:true, retailPrice:14.00},
+  ]},
+  {id:4, date:"2026-01-11", notes:"New year stock-up", addedBy:"Partner", tripScore:88, items:[
+    {id:41,name:"Gas Fill-Up",            category:"Gas",        amount:60.20,planned:true, kirkland:false,retailPrice:null},
+    {id:42,name:"Tide Pods 152ct",        category:"Household",  amount:29.99,planned:true, kirkland:false,retailPrice:38.00},
+    {id:43,name:"Kirkland Mixed Nuts",    category:"Groceries",  amount:24.99,planned:true, kirkland:true, retailPrice:34.00},
+    {id:44,name:"Kirkland Vitamins",      category:"Health",     amount:28.49,planned:true, kirkland:true, retailPrice:44.00},
+    {id:45,name:"Organic Chicken Breast", category:"Groceries",  amount:22.49,planned:false,kirkland:false,retailPrice:30.00},
+    {id:46,name:"Glad Trash Bags 200ct",  category:"Household",  amount:22.99,planned:true, kirkland:false,retailPrice:30.00},
+    {id:47,name:"Croissants 12ct",        category:"Bakery",     amount:8.99, planned:false,kirkland:true, retailPrice:14.00},
+  ]},
+  {id:5, date:"2026-02-08", notes:"Quick run", addedBy:"You", tripScore:75, items:[
+    {id:51,name:"Gas Fill-Up",            category:"Gas",        amount:57.40,planned:true, kirkland:false,retailPrice:null},
+    {id:52,name:"Kirkland Coffee 3lb",    category:"Groceries",  amount:39.99,planned:true, kirkland:true, retailPrice:55.00},
+    {id:53,name:"Atlantic Salmon",        category:"Groceries",  amount:36.49,planned:true, kirkland:false,retailPrice:48.00},
+    {id:54,name:"Kirkland Mixed Nuts",    category:"Groceries",  amount:24.99,planned:true, kirkland:true, retailPrice:34.00},
+    {id:55,name:"Snack Variety Pack",     category:"Groceries",  amount:16.99,planned:false,kirkland:false,retailPrice:null},
+    {id:56,name:"Kirkland Olive Oil 2L",  category:"Groceries",  amount:21.99,planned:false,kirkland:true, retailPrice:28.00},
+  ]},
+];
+
+export const SAMPLE_WISHLIST = [
+  {id:101,name:"Sony WH-1000XM5",       category:"Electronics",note:"Wait for price drop",    addedBy:"You"},
+  {id:102,name:"Dyson V15 Vacuum",      category:"Household",  note:"Check Black Friday",      addedBy:"Partner"},
+  {id:103,name:"Kirkland Laundry Pods", category:"Household",  note:"",                        addedBy:"You"},
+  {id:104,name:"Instant Pot Duo 8qt",   category:"Electronics",note:"Need for camping season", addedBy:"You"},
+  {id:105,name:"Weber Kettle Grill",    category:"Other",      note:"Summer project",           addedBy:"Partner"},
+];
