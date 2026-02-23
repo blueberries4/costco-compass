@@ -18,6 +18,7 @@ import {
   WAREHOUSE_STOCK,
 } from "../constants";
 import { relDate } from "../helpers";
+import { listApi, wishlistApi } from "../api/mockApi";
 
 export default function ListTab({staples, trips, wishlist, setWishlist, list, setList, animKey}) {
   const [newItem, setNewItem] = useState("");
@@ -30,33 +31,54 @@ export default function ListTab({staples, trips, wishlist, setWishlist, list, se
   const checked = list.filter(i => i.checked).length;
   const total = list.length;
 
-  const addToList = () => {
+  const addToList = async () => {
     if(!newItem.trim()) return;
-    setList(p => [...p, {id:Date.now(), name:newItem.trim(), category:newCat, checked:false, source:"manual"}]);
+    const item = {name:newItem.trim(), category:newCat, checked:false, source:"manual"};
+    const res = await listApi.addItem(item);
+    if(res.success) setList(p => [...p, res.data]);
     setNewItem("");
   };
-  const addFromSuggestion = s => {
+  const addFromSuggestion = async (s) => {
     if(list.find(i => i.name.toLowerCase() === s.name.toLowerCase())) return;
-    setList(p => [...p, {id:Date.now(), name:s.name, category:s.category, checked:false, source:"suggested"}]);
+    const item = {name:s.name, category:s.category, checked:false, source:"suggested"};
+    const res = await listApi.addItem(item);
+    if(res.success) setList(p => [...p, res.data]);
   };
-  const addFromWishlist = item => {
+  const addFromWishlist = async (item) => {
     if(list.find(i => i.name.toLowerCase() === item.name.toLowerCase())) return;
-    setList(p => [...p, {id:Date.now(), name:item.name, category:item.category, checked:false, source:"wishlist"}]);
+    const newItem = {name:item.name, category:item.category, checked:false, source:"wishlist"};
+    const res = await listApi.addItem(newItem);
+    if(res.success) setList(p => [...p, res.data]);
   };
-  const saveToWishlist = s => {
+  const saveToWishlist = async (s) => {
     if(wishlist.find(i => i.name.toLowerCase() === s.name.toLowerCase())) return;
-    setWishlist(p => [...p, {id:Date.now(), name:s.name, category:s.category, note:"", addedBy:MEMBER.household[0]}]);
+    const item = {name:s.name, category:s.category, note:"", addedBy:MEMBER.household[0]};
+    const res = await wishlistApi.create(item);
+    if(res.success) setWishlist(p => [...p, res.data]);
   };
-  const toggle = id => setList(p => p.map(i => i.id === id ? {...i, checked:!i.checked} : i));
-  const remove = id => setList(p => p.filter(i => i.id !== id));
-  const clearDone = () => setList(p => p.filter(i => !i.checked));
-  const saveWish = () => {
+  const toggle = async (id) => {
+    const res = await listApi.toggleItem(id);
+    if(res.success) setList(p => p.map(i => i.id === id ? res.data : i));
+  };
+  const remove = async (id) => {
+    const res = await listApi.removeItem(id);
+    if(res.success) setList(p => p.filter(i => i.id !== id));
+  };
+  const clearDone = async () => {
+    const res = await listApi.clearChecked();
+    if(res.success) setList(p => p.filter(i => !i.checked));
+  };
+  const saveWish = async () => {
     if(!nw.name.trim()) return;
-    setWishlist(p => [...p, {id:Date.now(), ...nw, name:nw.name.trim()}]);
+    const res = await wishlistApi.create({...nw, name:nw.name.trim()});
+    if(res.success) setWishlist(p => [...p, res.data]);
     setNw({name:"", category:"Electronics", note:"", addedBy:MEMBER.household[0]});
     setShowAddWish(false);
   };
-  const removeWish = id => setWishlist(p => p.filter(i => i.id !== id));
+  const removeWish = async (id) => {
+    const res = await wishlistApi.delete(id);
+    if(res.success) setWishlist(p => p.filter(i => i.id !== id));
+  };
 
   const stockBadge = name => {
     const s = WAREHOUSE_STOCK[name]?.[warehouse];

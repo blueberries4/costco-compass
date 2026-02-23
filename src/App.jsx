@@ -13,7 +13,7 @@ import {
   SOFT,
   TEXT,
 } from "./constants";
-import { SAMPLE_TRIPS, SAMPLE_WISHLIST } from "./data";
+import { tripsApi, wishlistApi, listApi } from "./api/mockApi";
 import {
   calcCashback,
   daysBetween,
@@ -35,24 +35,37 @@ import InsightsTab from "./components/InsightsTab";
 import BottomNav from "./components/BottomNav";
 import ReceiptScanModal from "./components/ReceiptScanModal";
 
-const SAMPLE_LIST = [
-  {id: 1, name: "Kirkland Paper Towels", category: "Household", checked: false, source: "suggested"},
-  {id: 2, name: "Rotisserie Chicken", category: "Groceries", checked: false, source: "manual"},
-  {id: 3, name: "Kirkland Olive Oil 2L", category: "Groceries", checked: true, source: "suggested"},
-  {id: 4, name: "Organic Eggs 24ct", category: "Groceries", checked: false, source: "manual"},
-  {id: 5, name: "Kirkland Mixed Nuts", category: "Groceries", checked: true, source: "suggested"},
-  {id: 6, name: "Bounty Paper Towels", category: "Household", checked: false, source: "manual"},
-  {id: 7, name: "Sony WH-1000XM5", category: "Electronics", checked: false, source: "wishlist"},
-];
-
 export default function App() {
-  const [trips, setTrips] = useState(SAMPLE_TRIPS);
-  const [wishlist, setWishlist] = useState(SAMPLE_WISHLIST);
-  const [tripList, setTripList] = useState(SAMPLE_LIST);
+  const [trips, setTrips] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [tripList, setTripList] = useState([]);
   const [tab, setTab] = useState("home");
   const [showScan, setShowScan] = useState(false);
   const [animKey, setAnimKey] = useState(0);
   const [paidOff, setPaidOff] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch initial data from mock APIs
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [tripsRes, wishlistRes, listRes] = await Promise.all([
+          tripsApi.getAll(),
+          wishlistApi.getAll(),
+          listApi.getAll(),
+        ]);
+        if (tripsRes.success) setTrips(tripsRes.data);
+        if (wishlistRes.success) setWishlist(wishlistRes.data);
+        if (listRes.success) setTripList(listRes.data);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => setAnimKey(k => k + 1), [tab]);
 
@@ -143,9 +156,14 @@ export default function App() {
     return "normal";
   }, [daysSinceLast, overdueStaples]);
 
-  const saveTrip = trip => {
-    setTrips(p => [...p, {...trip, tripScore: tripScore(trip)}]);
-    setTripList(p => p.filter(i => !i.checked));
+  const saveTrip = async (trip) => {
+    const newTrip = { ...trip, tripScore: tripScore(trip) };
+    const res = await tripsApi.create(newTrip);
+    if (res.success) {
+      setTrips(p => [...p, res.data]);
+      await listApi.clearChecked();
+      setTripList(p => p.filter(i => !i.checked));
+    }
   };
 
   /* ── HOME CONTEXTUAL BRIEF ── */
@@ -205,6 +223,22 @@ export default function App() {
   };
 
   /* ════ RENDER ═══════════════════════════════════════════════════ */
+  if (loading) {
+    return (
+      <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:"#D8D0C8"}}>
+        <div style={{width:"100%", maxWidth:430, minHeight:"100vh", background:BG,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          boxShadow:"0 0 48px rgba(0,0,0,0.16)"}}>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:40, marginBottom:12}}>🛒</div>
+            <div style={{fontSize:14, fontWeight:600, color:TEXT, marginBottom:4}}>Loading your data...</div>
+            <div style={{fontSize:11, color:MUTED}}>Syncing with Costco</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:"#D8D0C8"}}>
       <div style={{width:"100%", maxWidth:430, minHeight:"100vh", background:BG,
@@ -304,15 +338,17 @@ export default function App() {
                 <NudgeCard
                   staples={staples}
                   allItems={allItems}
-                  onAddToList={(item) => {
+                  onAddToList={async (item) => {
                     const newItem = {
-                      id: Date.now(),
                       name: item.name,
                       category: item.category,
                       checked: false,
                       source: item.type || "nudge",
                     };
-                    setTripList(prev => [...prev, newItem]);
+                    const res = await listApi.addItem(newItem);
+                    if (res.success) {
+                      setTripList(prev => [...prev, res.data]);
+                    }
                   }}
                   animDelay={0.4}
                 />
