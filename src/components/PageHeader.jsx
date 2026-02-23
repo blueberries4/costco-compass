@@ -3,7 +3,7 @@ import { RED, TEXT, MUTED } from "../constants";
 export default function PageHeader({left, right, gradient, badge}) {
   return (
     <div style={{background:gradient||"linear-gradient(145deg,#FFF9F5,#FDEAEA)",
-      padding:"42px 20px 14px", position:"relative", overflow:"hidden"}}>
+      padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
       <div style={{position:"absolute", top:-30, right:-30, width:95, height:95,
         borderRadius:"50%", background:`${RED}06`}}/>
       <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>

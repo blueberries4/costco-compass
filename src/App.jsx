@@ -30,6 +30,7 @@ import GasCard from "./components/GasCard";
 import TripScoreBadge from "./components/TripScoreBadge";
 import TripCard from "./components/TripCard";
 import ListTab from "./components/ListTab";
+import NudgeCard from "./components/NudgeCard";
 import InsightsTab from "./components/InsightsTab";
 import BottomNav from "./components/BottomNav";
 import ReceiptScanModal from "./components/ReceiptScanModal";
@@ -149,64 +150,57 @@ export default function App() {
 
   /* ── HOME CONTEXTUAL BRIEF ── */
   const HomeBrief = () => {
-    if(homeContext === "just_returned") return (
-      <div style={{background:`linear-gradient(135deg,${GREEN}14,${GREEN}06)`,
-        border:`1px solid ${GREEN}20`, borderRadius:14, padding:"13px 15px",
-        animation:"fadeUp 0.3s ease both"}}>
-        <div style={{fontSize:12, fontWeight:600, color:GREEN, marginBottom:3}}>
-          Welcome back from your trip ✓
-        </div>
-        <div style={{fontSize:11, color:MUTED, marginBottom:8}}>
-          {lastTrip?.notes || "Costco run"} · {relDate(lastTrip?.date)}
-        </div>
-        {lastTripScore !== null && (
-          <div style={{display:"flex", alignItems:"center", gap:8}}>
-            <TripScoreBadge score={lastTripScore} size="lg"/>
-            <div style={{fontSize:11, color:MUTED}}>
-              {lastTripScore >= 80 ? "Great trip — mostly on your list."
-               : lastTripScore >= 65 ? "Good run — a few extras crept in."
-               : "Quite a few impulse buys this time."}
-            </div>
+    if(homeContext === "just_returned") {
+      const impulseCount = lastTrip?.items?.filter(i => !i.planned).length || 0;
+      return (
+        <div style={{background:`linear-gradient(135deg,${GREEN}14,${GREEN}06)`,
+          border:`1px solid ${GREEN}20`, borderRadius:14, padding:"13px 15px",
+          animation:"fadeUp 0.3s ease both"}}>
+          <div style={{fontSize:12, fontWeight:600, color:GREEN, marginBottom:3}}>
+            Welcome back from your trip ✓
           </div>
-        )}
-      </div>
-    );
-    if(homeContext === "trip_due") return (
-      <div style={{background:AMBER+"0E", border:`1px solid ${AMBER}22`, borderRadius:14,
-        padding:"13px 15px", animation:"fadeUp 0.3s ease both"}}>
-        <div style={{fontSize:12, fontWeight:600, color:AMBER, marginBottom:2}}>
-          🏪 Time for a Costco run?
+          <div style={{fontSize:11, color:MUTED, marginBottom:8}}>
+            {lastTrip?.notes || "Costco run"} · {relDate(lastTrip?.date)}
+          </div>
+          {lastTripScore !== null && (
+            <div style={{display:"flex", alignItems:"center", gap:8}}>
+              <TripScoreBadge score={lastTripScore} size="lg"/>
+              <div style={{fontSize:11, color:MUTED}}>
+                {lastTripScore >= 85
+                  ? `You stuck to your list — ${impulseCount === 0 ? "no impulse buys!" : `only ${impulseCount} impulse buy${impulseCount > 1 ? "s" : ""}.`}`
+                  : lastTripScore >= 65
+                  ? `Good run — ${impulseCount} impulse buy${impulseCount !== 1 ? "s" : ""} snuck in.`
+                  : `${impulseCount} impulse buys this time — happens to everyone!`}
+              </div>
+            </div>
+          )}
         </div>
-        <div style={{fontSize:11, color:MUTED, marginBottom:8}}>
-          It's been {daysSinceLast} days since your last trip.
-        </div>
-        {overdueStaples.length > 0 && (
-          <div style={{display:"flex", gap:5, flexWrap:"wrap"}}>
+      );
+    }
+    if(homeContext === "trip_due") return null;
+    if(homeContext === "restock") {
+      const mostOverdue = overdueStaples[0];
+      return (
+        <div style={{background:SOFT, borderRadius:14, padding:"13px 15px",
+          animation:"fadeUp 0.3s ease both"}}>
+          <div style={{fontSize:12, fontWeight:600, color:TEXT, marginBottom:4}}>
+            🔮 You're probably out of {mostOverdue?.name?.split(" ")[0].toLowerCase()}
+          </div>
+          <div style={{fontSize:11, color:MUTED, marginBottom:10}}>
+            You're {mostOverdue?.daysSince} days out and you usually restock at {mostOverdue?.avgGap}.
+          </div>
+          <div style={{display:"flex", flexDirection:"column", gap:6}}>
             {overdueStaples.slice(0, 3).map(s => (
-              <Pill key={s.name} label={s.name} col={s.duePct >= 100 ? RED : AMBER}/>
+              <div key={s.name} style={{display:"flex", alignItems:"center", gap:8}}>
+                <span style={{fontSize:14}}>{CAT_ICON[s.category]}</span>
+                <span style={{flex:1, fontSize:12, color:TEXT}}>{s.name}</span>
+                <Pill label={s.duePct >= 100 ? "Overdue" : "Due soon"} col={s.duePct >= 100 ? RED : AMBER}/>
+              </div>
             ))}
-            {overdueStaples.length > 3 && <Pill label={`+${overdueStaples.length - 3} more`} col={MUTED}/>}
           </div>
-        )}
-      </div>
-    );
-    if(homeContext === "restock") return (
-      <div style={{background:SOFT, borderRadius:14, padding:"13px 15px",
-        animation:"fadeUp 0.3s ease both"}}>
-        <div style={{fontSize:12, fontWeight:600, color:TEXT, marginBottom:8}}>
-          🔮 Probably running low
         </div>
-        <div style={{display:"flex", flexDirection:"column", gap:6}}>
-          {overdueStaples.slice(0, 3).map(s => (
-            <div key={s.name} style={{display:"flex", alignItems:"center", gap:8}}>
-              <span style={{fontSize:14}}>{CAT_ICON[s.category]}</span>
-              <span style={{flex:1, fontSize:12, color:TEXT}}>{s.name}</span>
-              <Pill label={s.duePct >= 100 ? "Overdue" : "Due soon"} col={s.duePct >= 100 ? RED : AMBER}/>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+      );
+    }
     return null;
   };
 
@@ -223,7 +217,7 @@ export default function App() {
             <div key={`h-${animKey}`}>
               {/* Tight header */}
               <div style={{background:"linear-gradient(145deg,#FFF9F5,#FDEAEA)",
-                padding:"42px 20px 14px", position:"relative", overflow:"hidden"}}>
+                padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
                 <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
                   borderRadius:"50%", background:`${RED}06`}}/>
                 <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>
@@ -306,23 +300,22 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Household */}
-                <div style={{background:CARD, borderRadius:13, padding:"12px 14px",
-                  boxShadow:"0 2px 6px rgba(0,0,0,0.05)",
-                  animation:"fadeUp 0.28s 0.4s ease both"}}>
-                  <div style={{fontSize:11, fontWeight:600, color:TEXT, marginBottom:9}}>Household</div>
-                  <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:7}}>
-                    {byMember.map((m, i) => (
-                      <div key={m.name} style={{background:SOFT, borderRadius:10, padding:"10px 11px"}}>
-                        <div style={{fontSize:16, marginBottom:3}}>{i === 0 ? "🙋‍♂️" : "🙋‍♀️"}</div>
-                        <div style={{fontSize:11, fontWeight:600, color:TEXT}}>{m.name}</div>
-                        <div style={{fontSize:10, color:MUTED, marginTop:1}}>{m.trips} trip{m.trips !== 1 ? "s" : ""}</div>
-                        <div style={{fontSize:12, fontWeight:500, color:TEXT,
-                          fontFamily:"'DM Mono',monospace", marginTop:3}}>{fmt(m.spend)}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                {/* Quick Add Suggestions */}
+                <NudgeCard
+                  staples={staples}
+                  allItems={allItems}
+                  onAddToList={(item) => {
+                    const newItem = {
+                      id: Date.now(),
+                      name: item.name,
+                      category: item.category,
+                      checked: false,
+                      source: item.type || "nudge",
+                    };
+                    setTripList(prev => [...prev, newItem]);
+                  }}
+                  animDelay={0.4}
+                />
 
               </div>
             </div>
@@ -340,7 +333,7 @@ export default function App() {
           {tab === "trips" && (
             <div key={`t-${animKey}`}>
               <div style={{background:"linear-gradient(145deg,#FFF9F5,#EEF4FF)",
-                padding:"42px 20px 14px", position:"relative", overflow:"hidden"}}>
+                padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
                 <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
                   borderRadius:"50%", background:`${BLUE}07`}}/>
                 <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>

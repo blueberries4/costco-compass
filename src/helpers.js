@@ -8,6 +8,20 @@ export const today = () => new Date().toISOString().split("T")[0];
 
 export const daysBetween = (a,b) => Math.round(Math.abs(new Date(b)-new Date(a))/(1000*60*60*24));
 
+export const formatPaidOffDate = d => {
+  if(!d) return null;
+  const date = new Date(d);
+  return date.toLocaleDateString("en-US", {month:"long", day:"numeric"});
+};
+
+export const weeksUntil = d => {
+  const days = daysBetween(today(), d);
+  if(days <= 0) return "now";
+  if(days < 7) return `${days} days`;
+  const weeks = Math.round(days / 7);
+  return `${weeks} week${weeks !== 1 ? 's' : ''}`;
+};
+
 export const relDate = d => {
   const days = daysBetween(d,today());
   if(days===0) return "Today";

@@ -1,6 +1,10 @@
 import { Card } from "./atoms";
-import { AMBER, BLUE, GOLD, MUTED, RED, SOFT, TEXT, MEMBER } from "../constants";
+import { AMBER, BLUE, GOLD, GREEN, MUTED, RED, SOFT, TEXT, MEMBER } from "../constants";
 import { daysBetween, fmt, relDate, today } from "../helpers";
+
+// Simulated average competitor premium (Costco typically 15-40 cents/gallon cheaper)
+const AVG_PREMIUM_CENTS = 0.28; // $/gallon
+const AVG_GALLONS_PER_FILL = 14;
 
 export default function GasCard({gasItems, animDelay=0}) {
   if(!gasItems.length) return null;
@@ -8,6 +12,11 @@ export default function GasCard({gasItems, animDelay=0}) {
   const totalCashback = gasItems.reduce((s,i) => s + i.amount * MEMBER.gasCashbackRate, 0);
   const totalSpend = gasItems.reduce((s,i) => s + i.amount, 0);
   const avgFillCost = totalSpend / gasItems.length;
+
+  // Estimated savings vs nearby stations (based on avg 28¢/gal premium × estimated gallons)
+  const estGallons = gasItems.length * AVG_GALLONS_PER_FILL;
+  const estSavedVsCompetitor = estGallons * AVG_PREMIUM_CENTS;
+  const lastFillSavings = AVG_GALLONS_PER_FILL * AVG_PREMIUM_CENTS;
 
   const sortedDates = [...new Set(gasItems.map(i => i.date))].sort();
   const gaps = [];
@@ -17,6 +26,7 @@ export default function GasCard({gasItems, animDelay=0}) {
   const daysSince = daysBetween(lastFillDate, today());
   const duePct = Math.min(Math.round((daysSince/avgGap)*100), 100);
   const isDue = duePct >= 85;
+  const isRecent = daysSince <= 3;
 
   const spark = gasItems
     .sort((a,b) => a.date.localeCompare(b.date))
@@ -24,7 +34,7 @@ export default function GasCard({gasItems, animDelay=0}) {
 
   return (
     <Card animDelay={animDelay}
-      style={{border: isDue ? `1px solid ${AMBER}28` : "1px solid transparent"}}>
+      style={{border: isDue ? `1px solid ${AMBER}28` : isRecent ? `1px solid ${GREEN}28` : "1px solid transparent"}}>
       {/* Header */}
       <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10}}>
         <div style={{display:"flex", alignItems:"center", gap:9}}>
@@ -32,8 +42,10 @@ export default function GasCard({gasItems, animDelay=0}) {
             display:"flex", alignItems:"center", justifyContent:"center", fontSize:18}}>⛽</div>
           <div>
             <div style={{fontSize:12, fontWeight:600, color:TEXT}}>Gas at Costco</div>
-            <div style={{fontSize:10, color:isDue ? AMBER : MUTED}}>
-              {isDue ? `⚠ ${daysSince}d since last fill-up` : `Last fill-up ${relDate(lastFillDate)}`}
+            <div style={{fontSize:10, color:isDue ? AMBER : isRecent ? GREEN : MUTED}}>
+              {isDue ? `⚠ ${daysSince}d since last fill-up`
+               : isRecent ? `Filled up ${relDate(lastFillDate)} ✓`
+               : `Last fill-up ${relDate(lastFillDate)}`}
             </div>
           </div>
         </div>
@@ -44,11 +56,27 @@ export default function GasCard({gasItems, animDelay=0}) {
         </div>
       </div>
 
+      {/* Recent fill-up "aha" moment */}
+      {isRecent && (
+        <div style={{background:`${GREEN}0E`, borderRadius:9, padding:"9px 10px", marginBottom:10,
+          display:"flex", alignItems:"center", gap:8}}>
+          <div style={{fontSize:16}}>💵</div>
+          <div>
+            <div style={{fontSize:11, fontWeight:600, color:GREEN}}>
+              That fill-up saved you ~{fmt(lastFillSavings)} vs nearby stations
+            </div>
+            <div style={{fontSize:10, color:MUTED, marginTop:1}}>
+              Costco avg 28¢/gal cheaper + 4% cashback = smart move
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats tiles */}
       <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, marginBottom:10}}>
         {[
           {label:"Fill-ups", val:`${gasItems.length}`, col:TEXT},
-          {label:"Avg fill cost", val:fmt(avgFillCost).replace("$","$"), col:TEXT},
+          {label:"Est. saved vs nearby", val:`~${fmt(estSavedVsCompetitor)}`, col:GREEN},
           {label:"Avg gap", val:`${avgGap}d`, col:BLUE},
         ].map(s => (
           <div key={s.label} style={{background:SOFT, borderRadius:9, padding:"8px", textAlign:"center"}}>

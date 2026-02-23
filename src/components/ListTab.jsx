@@ -70,7 +70,7 @@ export default function ListTab({staples, trips, wishlist, setWishlist, list, se
     <div key={`l-${animKey}`}>
       {/* Header */}
       <div style={{background:"linear-gradient(145deg,#F5F9FF,#EFF4FF)",
-        padding:"42px 20px 14px", position:"relative", overflow:"hidden"}}>
+        padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
         <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
           borderRadius:"50%", background:`${BLUE}07`}}/>
         <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>
@@ -82,13 +82,22 @@ export default function ListTab({staples, trips, wishlist, setWishlist, list, se
             {total > 0 && <div style={{fontSize:10, color:MUTED, marginTop:3}}>{checked}/{total} checked off</div>}
           </div>
           {total > 0 && (
-            <div style={{width:44, height:44}}>
-              <svg viewBox="0 0 36 36" style={{transform:"rotate(-90deg)"}}>
+            <div style={{position:"relative", width:48, height:48}}>
+              <svg viewBox="0 0 36 36" style={{transform:"rotate(-90deg)", width:"100%", height:"100%"}}>
                 <circle cx="18" cy="18" r="15" fill="none" stroke={SOFT} strokeWidth="3"/>
-                <circle cx="18" cy="18" r="15" fill="none" stroke={BLUE} strokeWidth="3"
+                <circle cx="18" cy="18" r="15" fill="none" stroke={checked === total ? GREEN : BLUE} strokeWidth="3"
                   strokeDasharray={`${(checked/total)*94} 94`}
                   strokeLinecap="round"/>
               </svg>
+              <div style={{
+                position:"absolute", top:"50%", left:"50%", transform:"translate(-50%, -50%)",
+                fontSize: checked === total ? 14 : 11,
+                fontWeight:700,
+                color: checked === total ? GREEN : BLUE,
+                fontFamily:"'Barlow Condensed',sans-serif",
+              }}>
+                {checked === total ? "✓" : `${Math.round((checked/total)*100)}%`}
+              </div>
             </div>
           )}
         </div>
