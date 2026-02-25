@@ -71,12 +71,11 @@ export default function InsightsTab({trips, allItems, staples, catTotals, byMemb
   ];
 
   return (
-    <div key={`i-${animKey}`}>
+    <div key={`i-${animKey}`} style={{background:SOFT}}>
       <PageHeader
-        left={{eyebrow:"since you joined", title:"Insights", sub:"What your data actually says"}}
-        gradient="linear-gradient(145deg,#FFF9F5,#F5F0FF)"/>
+        left={{title:"Savings Insights", sub:"Your shopping data"}}/>
 
-      <div style={{padding:"12px 18px", display:"flex", flexDirection:"column", gap:10}}>
+      <div style={{padding:"12px 16px", display:"flex", flexDirection:"column", gap:10}}>
 
         {/* 1. Aha moments row */}
         <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8}}>

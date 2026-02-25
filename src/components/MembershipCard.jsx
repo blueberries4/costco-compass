@@ -1,77 +1,172 @@
-import { RED, MEMBER } from "../constants";
-import { fmt, memberYear, formatPaidOffDate, weeksUntil, daysBetween, today } from "../helpers";
+import { RED, MEMBER, GOLD, MUTED, TEXT, GREEN, BLUE, FONT, TYPO } from "../constants";
+import { fmt, memberYear, formatPaidOffDate, weeksUntil } from "../helpers";
 
 export default function MembershipCard({totalSaved, fee, cashbackYTD, projectedAnnual, paidOffDate}) {
   const roiPct   = Math.min(Math.round((totalSaved/fee)*100), 100);
   const isEarned = totalSaved >= fee;
-  const cbPct    = Math.min(Math.round((cashbackYTD/MEMBER.cashbackMax)*100), 100);
   const {end}    = memberYear();
-  const checkDate = new Date(end).toLocaleDateString("en-US", {month:"short", day:"numeric"});
   const weeksToCheck = weeksUntil(end);
   const paidOffFormatted = formatPaidOffDate(paidOffDate);
+  const isExecutive = MEMBER.type === "Executive";
+
+  // Card colors - matches real Costco card
+  const cardBg = isExecutive 
+    ? "linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)"
+    : "linear-gradient(145deg, #E31837 0%, #c41230 50%, #E31837 100%)";
+  const accentColor = isExecutive ? GOLD : "#fff";
 
   return (
-    <div className={isEarned ? "glow" : ""} style={{
-      background:`linear-gradient(135deg,${RED} 0%,#9E001A 100%)`,
-      borderRadius:18, padding:"16px 18px", color:"#fff", position:"relative", overflow:"hidden",
-      boxShadow:`0 5px 20px ${RED}40`, animation:"fadeUp 0.35s ease both"}}>
-      <div style={{position:"absolute", top:-24, right:-24, width:90, height:90,
-        borderRadius:"50%", background:"rgba(255,255,255,0.05)"}}/>
-      <div style={{position:"relative"}}>
+    <div style={{
+      background: cardBg,
+      borderRadius: 14,
+      overflow: "hidden",
+      boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.12)",
+      animation: "fadeUp 0.25s ease both",
+      position: "relative",
+    }}>
+      {/* Subtle shine effect */}
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        height: "50%",
+        background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)",
+        pointerEvents: "none",
+      }}/>
 
-        {/* Header row */}
-        <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10}}>
+      {/* Card Header - Member type & stars */}
+      <div style={{padding: "16px 18px 12px", position: "relative"}}>
+        <div style={{display: "flex", justifyContent: "space-between", alignItems: "flex-start"}}>
           <div>
-            <div style={{fontSize:8, letterSpacing:"0.12em", opacity:0.55, marginBottom:3}}>
-              COSTCO {MEMBER.type.toUpperCase()} · ROI
+            <div style={{
+              ...TYPO.badge,
+              color: "rgba(255,255,255,0.6)",
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              marginBottom: 4,
+              fontFamily: FONT,
+            }}>
+              Membership
             </div>
-            <div style={{fontSize:30, fontWeight:700, fontFamily:"'Barlow Condensed',sans-serif",
-              letterSpacing:"0.3px", lineHeight:1}}>{fmt(totalSaved)}</div>
-            <div style={{fontSize:10, opacity:0.6, marginTop:1}}>saved vs retail</div>
+            <div style={{
+              ...TYPO.pageTitle,
+              color: accentColor,
+              fontFamily: FONT,
+              letterSpacing: 0.5,
+            }}>
+              {MEMBER.type}
+            </div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:8, opacity:0.55, marginBottom:2}}>ANNUAL FEE</div>
-            <div style={{fontSize:15, fontWeight:600, fontFamily:"'DM Mono',monospace"}}>{fmt(fee)}</div>
-            <div style={{fontSize:8, opacity:0.6, marginTop:4,
-              background:"rgba(255,255,255,0.12)", borderRadius:20, padding:"2px 7px"}}>
-              {roiPct}% recovered
+          {isExecutive && (
+            <div style={{
+              display: "flex",
+              gap: 2,
+              marginTop: 4,
+            }}>
+              {[1,2].map(i => (
+                <span key={i} style={{fontSize: 14, color: GOLD}}>★</span>
+              ))}
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Member Info */}
+      <div style={{padding: "0 18px 14px"}}>
+        <div style={{
+          ...TYPO.sectionTitle,
+          color: "#fff",
+          fontFamily: FONT,
+          letterSpacing: 0.3,
+        }}>
+          {MEMBER.household[0]}
+        </div>
+        <div style={{
+          ...TYPO.caption,
+          color: "rgba(255,255,255,0.5)",
+          marginTop: 3,
+          fontFamily: "monospace",
+          letterSpacing: 1,
+        }}>
+          ●●●● ●●●● {MEMBER.memberNum?.toString().slice(-4) || "1234"}
+        </div>
+      </div>
+
+      {/* Divider line */}
+      <div style={{
+        height: 1,
+        background: isExecutive 
+          ? "linear-gradient(90deg, transparent, rgba(212,175,55,0.3), transparent)"
+          : "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
+        margin: "0 18px",
+      }}/>
+
+      {/* Value Stats */}
+      <div style={{padding: "14px 18px 16px"}}>
+        {/* ROI Progress */}
+        <div style={{marginBottom: 14}}>
+          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6}}>
+            <span style={{...TYPO.cardMeta, color: "rgba(255,255,255,0.6)", fontFamily: FONT}}>
+              Membership Value
+            </span>
+            <span style={{...TYPO.cardBody, fontWeight: 700, color: isEarned ? GREEN : accentColor, fontFamily: FONT}}>
+              {roiPct}%{isEarned ? " ✓" : ""}
+            </span>
+          </div>
+          <div style={{height: 4, background: "rgba(255,255,255,0.15)", borderRadius: 2, overflow: "hidden"}}>
+            <div style={{
+              height: "100%",
+              borderRadius: 2,
+              width: roiPct + "%",
+              background: isEarned ? GREEN : accentColor,
+              transition: "width 0.4s ease",
+            }}/>
+          </div>
+          <div style={{display: "flex", justifyContent: "space-between", marginTop: 6}}>
+            <span style={{...TYPO.caption, color: "rgba(255,255,255,0.5)", fontFamily: FONT}}>
+              {isEarned 
+                ? "Paid off" + (paidOffFormatted ? " " + paidOffFormatted : "") + "!"
+                : fmt(fee - totalSaved) + " to break even"}
+            </span>
+            <span style={{...TYPO.caption, color: accentColor, fontWeight: 600, fontFamily: FONT}}>
+              {fmt(totalSaved)} saved
+            </span>
           </div>
         </div>
 
-        {/* ROI bar */}
-        <div style={{height:3, background:"rgba(255,255,255,0.15)", borderRadius:2, overflow:"hidden", marginBottom:4}}>
-          <div className="fbar" style={{height:"100%", borderRadius:2, width:`${roiPct}%`,
-            background:isEarned ? "#fff" : "rgba(255,255,255,0.78)",
-            boxShadow:isEarned ? "0 0 6px rgba(255,255,255,0.45)" : "none"}}/>
-        </div>
-        <div style={{fontSize:10, opacity:0.75, marginBottom:12, lineHeight:1.4}}>
-          {isEarned
-            ? `🎉 Membership paid for itself${paidOffFormatted ? ` on ${paidOffFormatted}` : ""}! You're ${fmt(totalSaved-fee)} ahead.`
-            : `${fmt(fee-Math.min(totalSaved, fee))} more savings to break even`}
-        </div>
-
-        {/* Cashback secondary row */}
-        {MEMBER.type === "Executive" && (
-          <div style={{borderTop:"1px solid rgba(255,255,255,0.13)", paddingTop:10,
-            display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+        {/* Executive Cashback Row */}
+        {isExecutive && (
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "rgba(212,175,55,0.08)",
+            borderRadius: 8,
+            padding: "10px 12px",
+          }}>
             <div>
-              <div style={{fontSize:8, opacity:0.55, letterSpacing:"0.08em", marginBottom:2}}>
-                2% + 4% GAS CASHBACK
+              <div style={{...TYPO.caption, color: "rgba(255,255,255,0.5)", marginBottom: 2, fontFamily: FONT}}>
+                2% Reward
               </div>
-              <div style={{display:"flex", alignItems:"baseline", gap:5}}>
-                <span style={{fontSize:18, fontWeight:700, fontFamily:"'Barlow Condensed',sans-serif"}}>
-                  {fmt(cashbackYTD)}
-                </span>
-                <span style={{fontSize:9, opacity:0.6}}>est. {fmt(projectedAnnual)}/yr</span>
+              <div style={{...TYPO.statLarge, color: GOLD, fontFamily: FONT}}>
+                {fmt(cashbackYTD)}
               </div>
             </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{fontSize:8, opacity:0.55, marginBottom:2}}>CHECK ARRIVES</div>
-              <div style={{fontSize:11, fontWeight:600}}>in {weeksToCheck}</div>
-              <div style={{marginTop:3, height:2, width:52, background:"rgba(255,255,255,0.15)",
-                borderRadius:1, overflow:"hidden", marginLeft:"auto"}}>
-                <div className="fbar" style={{height:"100%", background:"rgba(255,255,255,0.65)", width:`${cbPct}%`}}/>
+            <div style={{textAlign: "right"}}>
+              <div style={{...TYPO.caption, color: "rgba(255,255,255,0.5)", marginBottom: 2, fontFamily: FONT}}>
+                Projected
+              </div>
+              <div style={{...TYPO.body, fontWeight: 600, color: "#fff", fontFamily: FONT}}>
+                {fmt(projectedAnnual)}
+              </div>
+            </div>
+            <div style={{textAlign: "right"}}>
+              <div style={{...TYPO.caption, color: "rgba(255,255,255,0.5)", marginBottom: 2, fontFamily: FONT}}>
+                Check
+              </div>
+              <div style={{...TYPO.cardBody, fontWeight: 600, color: GOLD, fontFamily: FONT}}>
+                {weeksToCheck}
               </div>
             </div>
           </div>

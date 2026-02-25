@@ -5,6 +5,8 @@ import {
   BLUE,
   CARD,
   CAT_ICON,
+  DARK_BLUE,
+  FONT,
   GOLD,
   GREEN,
   MEMBER,
@@ -12,8 +14,10 @@ import {
   RED,
   SOFT,
   TEXT,
+  TYPO,
+  BORDER,
 } from "./constants";
-import { tripsApi, wishlistApi, listApi } from "./api/mockApi";
+import { tripsApi, listApi } from "./api/mockApi";
 import {
   calcCashback,
   daysBetween,
@@ -26,18 +30,16 @@ import {
 } from "./helpers";
 import { Pill } from "./components/atoms";
 import MembershipCard from "./components/MembershipCard";
-import GasCard from "./components/GasCard";
 import TripScoreBadge from "./components/TripScoreBadge";
 import TripCard from "./components/TripCard";
 import ListTab from "./components/ListTab";
 import NudgeCard from "./components/NudgeCard";
-import InsightsTab from "./components/InsightsTab";
 import BottomNav from "./components/BottomNav";
 import ReceiptScanModal from "./components/ReceiptScanModal";
+import SavingsTab from "./components/SavingsTab";
 
 export default function App() {
   const [trips, setTrips] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
   const [tripList, setTripList] = useState([]);
   const [tab, setTab] = useState("home");
   const [showScan, setShowScan] = useState(false);
@@ -50,13 +52,11 @@ export default function App() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [tripsRes, wishlistRes, listRes] = await Promise.all([
+        const [tripsRes, listRes] = await Promise.all([
           tripsApi.getAll(),
-          wishlistApi.getAll(),
           listApi.getAll(),
         ]);
         if (tripsRes.success) setTrips(tripsRes.data);
-        if (wishlistRes.success) setWishlist(wishlistRes.data);
         if (listRes.success) setTripList(listRes.data);
       } catch (err) {
         console.error("Failed to fetch data:", err);
@@ -102,11 +102,6 @@ export default function App() {
   const daysElapsed = Math.min(daysBetween(yearStart, today()), yearDays);
   const projectedAnnual = daysElapsed > 0 ? Math.min((cashbackYTD / daysElapsed) * yearDays, MEMBER.cashbackMax) : 0;
 
-  /* ── GAS ── */
-  const gasItems = useMemo(() =>
-    trips.flatMap(t => t.items.filter(i => i.category === "Gas").map(i => ({...i, date: t.date})))
-  , [trips]);
-
   /* ── STAPLES ── */
   const staples = useMemo(() => {
     const map = {};
@@ -129,22 +124,7 @@ export default function App() {
     }).sort((a,b) => b.duePct - a.duePct);
   }, [trips]);
 
-  /* ── CAT TOTALS ── */
-  const catTotals = useMemo(() => {
-    const m = {};
-    allItems.forEach(i => { m[i.category] = (m[i.category] || 0) + i.amount; });
-    return Object.keys(m).map(c => ({cat: c, total: m[c]})).filter(x => x.total > 0).sort((a,b) => b.total - a.total);
-  }, [allItems]);
-
-  /* ── HOUSEHOLD ── */
-  const byMember = useMemo(() => MEMBER.household.map(m => ({
-    name: m,
-    trips: trips.filter(t => t.addedBy === m).length,
-    spend: trips.filter(t => t.addedBy === m).reduce((s,t) => s + t.items.reduce((a,i) => a + i.amount, 0), 0),
-  })), [trips]);
-
   /* ── CONTEXTUAL HOME STATE ── */
-  const impulseRate = allItems.length ? Math.round((allItems.filter(i => !i.planned).length / allItems.length) * 100) : 0;
   const overdueStaples = staples.filter(s => s.duePct >= 80);
   const lastTripScore = lastTrip ? (lastTrip.tripScore ?? tripScore(lastTrip)) : null;
 
@@ -225,14 +205,14 @@ export default function App() {
   /* ════ RENDER ═══════════════════════════════════════════════════ */
   if (loading) {
     return (
-      <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:"#D8D0C8"}}>
+      <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:SOFT}}>
         <div style={{width:"100%", maxWidth:430, minHeight:"100vh", background:BG,
           display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:"0 0 48px rgba(0,0,0,0.16)"}}>
+          boxShadow:"0 0 48px rgba(0,0,0,0.12)"}}>
           <div style={{textAlign:"center"}}>
-            <div style={{fontSize:40, marginBottom:12}}>🛒</div>
-            <div style={{fontSize:14, fontWeight:600, color:TEXT, marginBottom:4}}>Loading your data...</div>
-            <div style={{fontSize:11, color:MUTED}}>Syncing with Costco</div>
+            <div style={{width:40, height:40, border:`3px solid ${BORDER}`, borderTopColor:RED,
+              borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 16px"}}/>
+            <div style={{fontSize:15, fontWeight:600, color:TEXT}}>Loading...</div>
           </div>
         </div>
       </div>
@@ -240,101 +220,85 @@ export default function App() {
   }
 
   return (
-    <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:"#D8D0C8"}}>
-      <div style={{width:"100%", maxWidth:430, minHeight:"100vh", background:BG,
-        position:"relative", overflow:"hidden", boxShadow:"0 0 48px rgba(0,0,0,0.16)"}}>
+    <div style={{display:"flex", justifyContent:"center", minHeight:"100vh", background:SOFT}}>
+      <div style={{width:"100%", maxWidth:430, minHeight:"100vh", background:SOFT,
+        position:"relative", overflow:"hidden", boxShadow:"0 0 48px rgba(0,0,0,0.10)"}}>
 
-        <div style={{overflowY:"auto", height:"100vh", paddingBottom:74, scrollbarWidth:"none"}}>
+        <div style={{overflowY:"auto", height:"100vh", paddingBottom:80, scrollbarWidth:"none"}}>
 
           {/* ══ HOME ═══════════════════════════════════════════ */}
           {tab === "home" && (
             <div key={`h-${animKey}`}>
-              {/* Tight header */}
-              <div style={{background:"linear-gradient(145deg,#FFF9F5,#FDEAEA)",
-                padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
-                <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
-                  borderRadius:"50%", background:`${RED}06`}}/>
-                <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>
-                  <div>
-                    <div style={{fontSize:9, color:MUTED, letterSpacing:"0.08em",
-                      textTransform:"uppercase", marginBottom:3}}>
-                      {MEMBER.household.join(" & ")} · {MEMBER.type}
-                    </div>
-                    <div style={{fontSize:22, fontWeight:700, color:TEXT,
-                      fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.3px", lineHeight:1}}>
-                      Good {new Date().getHours() < 12 ? "morning" : "afternoon"} 👋
-                    </div>
-                  </div>
-                  {/* Sync status */}
-                  <div style={{display:"flex", alignItems:"center", gap:5,
-                    background:GREEN+"12", borderRadius:20, padding:"4px 9px"}}>
-                    <div style={{width:5, height:5, borderRadius:"50%", background:GREEN}}
-                      className="pulse"/>
-                    <span style={{fontSize:9, fontWeight:600, color:GREEN}}>Auto-synced</span>
+              {/* Costco-style blue header bar */}
+              <div style={{background:BLUE, padding:"14px 16px", display:"flex", 
+                justifyContent:"space-between", alignItems:"center"}}>
+                <div style={{...TYPO.pageTitle, color:"#fff", fontFamily:FONT}}>
+                  My Costco
+                </div>
+                <div style={{display:"flex", alignItems:"center", gap:16}}>
+                  <span style={{fontSize:20, color:"#fff"}}>🔔</span>
+                  <div style={{width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,0.2)",
+                    display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", 
+                    fontSize:14, fontWeight:600}}>
+                    {MEMBER.household[0]?.charAt(0) || "U"}
                   </div>
                 </div>
               </div>
 
-              <div style={{padding:"12px 18px", display:"flex", flexDirection:"column", gap:10}}>
+              <div style={{padding:"12px 16px", display:"flex", flexDirection:"column", gap:10}}>
 
                 {/* Contextual brief — changes based on state */}
                 <HomeBrief/>
 
-                {/* Membership + cashback — single card */}
+                {/* Membership ROI + Cashback — THE key value prop */}
                 <MembershipCard
                   totalSaved={totalSavedAll} fee={MEMBER.fee}
                   cashbackYTD={cashbackYTD} projectedAnnual={projectedAnnual}
                   paidOffDate={paidOff}/>
 
-                {/* Gas card — only calculable data */}
-                {gasItems.length > 0 && <GasCard gasItems={gasItems} animDelay={0.1}/>}
-
-                {/* Quick stats — no duplicate savings */}
-                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:8}}>
-                  {[
-                    {label:"Last trip", val: daysSinceLast !== null ? `${daysSinceLast}d ago` : "—",
-                     sub: lastTrip?.notes || "", col: daysSinceLast > 18 ? AMBER : GREEN},
-                    {label:"Trips logged", val:`${trips.length}`,
-                     sub:`${MEMBER.household.join(" & ")}`, col:BLUE},
-                    {label:"Impulse rate", val:`${impulseRate}%`,
-                     sub:`${allItems.filter(i => !i.planned).length} unplanned items`,
-                     col: impulseRate > 40 ? RED : MUTED},
-                    {label:"Cashback YTD", val:fmtShort(cashbackYTD),
-                     sub:"Executive 2% + 4% gas", col:GOLD},
-                  ].map((s, i) => (
-                    <div key={s.label} className="lift" style={{background:CARD, borderRadius:13,
-                      padding:"12px", boxShadow:"0 2px 6px rgba(0,0,0,0.05)",
-                      animation:`fadeUp 0.28s ${0.18 + i * 0.06}s ease both`}}>
-                      <div style={{fontSize:9, fontWeight:500, color:MUTED, textTransform:"uppercase",
-                        letterSpacing:"0.07em", marginBottom:3}}>{s.label}</div>
-                      <div style={{fontSize:18, fontWeight:700, color:s.col,
-                        fontFamily:"'Barlow Condensed',sans-serif", lineHeight:1}}>{s.val}</div>
-                      <div style={{fontSize:9, color:MUTED, marginTop:2, lineHeight:1.3}}>{s.sub}</div>
+                {/* Quick stats - simplified to 2 key metrics */}
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
+                  <div className="lift" style={{background:"#fff", borderRadius:10,
+                    padding:"14px", border:`1px solid ${BORDER}`,
+                    animation:"fadeUp 0.25s 0.1s ease both"}}>
+                    <div style={{...TYPO.cardMeta, color:MUTED, marginBottom:6, fontFamily:FONT}}>Last Trip</div>
+                    <div style={{...TYPO.statLarge, color: daysSinceLast > 18 ? AMBER : GREEN,
+                      fontFamily:FONT, lineHeight:1}}>
+                      {daysSinceLast !== null ? `${daysSinceLast}d ago` : "—"}
                     </div>
-                  ))}
+                    <div style={{...TYPO.caption, color:MUTED, marginTop:4, fontFamily:FONT}}>{lastTrip?.notes || ""}</div>
+                  </div>
+                  <div className="lift" style={{background:"#fff", borderRadius:10,
+                    padding:"14px", border:`1px solid ${BORDER}`,
+                    animation:"fadeUp 0.25s 0.15s ease both"}}>
+                    <div style={{...TYPO.cardMeta, color:MUTED, marginBottom:6, fontFamily:FONT}}>Cashback YTD</div>
+                    <div style={{...TYPO.statLarge, color:GOLD,
+                      fontFamily:FONT, lineHeight:1}}>{fmtShort(cashbackYTD)}</div>
+                    <div style={{...TYPO.caption, color:MUTED, marginTop:4, fontFamily:FONT}}>Executive 2%</div>
+                  </div>
                 </div>
 
                 {/* Trip list CTA if items exist */}
                 {tripList.length > 0 && (
-                  <div className="tap lift" onClick={() => setTab("list")}
-                    style={{background:`${BLUE}0E`, border:`1px solid ${BLUE}18`,
-                      borderRadius:14, padding:"12px 14px", display:"flex",
-                      alignItems:"center", gap:10, cursor:"pointer",
-                      animation:"fadeUp 0.28s 0.38s ease both"}}>
-                    <span style={{fontSize:20}}>📋</span>
+                  <div className="tap" onClick={() => setTab("list")}
+                    style={{background:"#fff", border:`1px solid ${BORDER}`,
+                      borderRadius:10, padding:"14px 16px", display:"flex",
+                      alignItems:"center", gap:12, cursor:"pointer",
+                      animation:"fadeUp 0.25s 0.2s ease both"}}>
+                    <span style={{fontSize:22}}>📋</span>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:12, fontWeight:600, color:BLUE}}>
-                        {tripList.length} item{tripList.length !== 1 ? "s" : ""} on your list
+                      <div style={{...TYPO.cardTitle, color:TEXT, fontFamily:FONT}}>
+                        Shopping List
                       </div>
-                      <div style={{fontSize:10, color:MUTED, marginTop:1}}>
-                        {tripList.filter(i => i.checked).length} checked off · tap to review
+                      <div style={{...TYPO.bodySmall, color:MUTED, marginTop:2, fontFamily:FONT}}>
+                        {tripList.length} item{tripList.length !== 1 ? "s" : ""} · {tripList.filter(i => i.checked).length} checked
                       </div>
                     </div>
-                    <span style={{color:BLUE, fontSize:14}}>→</span>
+                    <span style={{...TYPO.sectionTitle, color:BLUE, fontFamily:FONT}}>›</span>
                   </div>
                 )}
 
-                {/* Quick Add Suggestions */}
+                {/* Smart Suggestions - staple prediction */}
                 <NudgeCard
                   staples={staples}
                   allItems={allItems}
@@ -350,7 +314,7 @@ export default function App() {
                       setTripList(prev => [...prev, res.data]);
                     }
                   }}
-                  animDelay={0.4}
+                  animDelay={0.25}
                 />
 
               </div>
@@ -360,56 +324,58 @@ export default function App() {
           {/* ══ LIST ═══════════════════════════════════════════ */}
           {tab === "list" && (
             <ListTab
-              staples={staples} trips={trips} wishlist={wishlist}
-              setWishlist={setWishlist} list={tripList} setList={setTripList}
+              staples={staples} trips={trips}
+              list={tripList} setList={setTripList}
               animKey={animKey}/>
+          )}
+
+          {/* ══ DEALS / SAVINGS EVENT ══════════════════════════ */}
+          {tab === "deals" && (
+            <SavingsTab
+              animKey={animKey}
+              list={tripList}
+              setList={setTripList}
+              onAddToList={async (item) => {
+                const newItem = {
+                  name: item.name,
+                  category: item.category,
+                  checked: false,
+                  source: "deal",
+                };
+                const res = await listApi.addItem(newItem);
+                if (res.success) {
+                  setTripList(prev => [...prev, res.data]);
+                }
+              }}
+            />
           )}
 
           {/* ══ TRIPS ══════════════════════════════════════════ */}
           {tab === "trips" && (
-            <div key={`t-${animKey}`}>
-              <div style={{background:"linear-gradient(145deg,#FFF9F5,#EEF4FF)",
-                padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
-                <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
-                  borderRadius:"50%", background:`${BLUE}07`}}/>
-                <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>
-                  <div>
-                    <div style={{fontSize:9, color:MUTED, letterSpacing:"0.08em",
-                      textTransform:"uppercase", marginBottom:3}}>{trips.length} runs</div>
-                    <div style={{fontSize:22, fontWeight:700, color:TEXT,
-                      fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.3px", lineHeight:1}}>
-                      Trip History
-                    </div>
-                    <div style={{fontSize:10, color:MUTED, marginTop:3}}>
-                      Auto-imported · tap to expand
-                    </div>
+            <div key={`t-${animKey}`} style={{background:SOFT}}>
+              {/* Blue header */}
+              <div style={{background:BLUE, padding:"14px 16px", display:"flex", 
+                justifyContent:"space-between", alignItems:"center"}}>
+                <div style={{color:"#fff"}}>
+                  <div style={{...TYPO.pageTitle, fontFamily:FONT}}>
+                    Trip History
                   </div>
-                  {/* Manual fallback */}
-                  <button className="tap" onClick={() => setShowScan(true)}
-                    style={{background:BLUE+"12", color:BLUE, border:"none", borderRadius:20,
-                      padding:"6px 12px", fontSize:11, fontWeight:600, cursor:"pointer",
-                      fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                    📷 Add manually
-                  </button>
+                  <div style={{...TYPO.pageSubtitle, opacity:0.85, marginTop:2, fontFamily:FONT}}>{trips.length} trips logged</div>
                 </div>
+                <button className="tap" onClick={() => setShowScan(true)}
+                  style={{background:"rgba(255,255,255,0.2)", color:"#fff", border:"none", borderRadius:6,
+                    padding:"8px 12px", ...TYPO.buttonMedium, cursor:"pointer",
+                    fontFamily:FONT}}>
+                  + Add
+                </button>
               </div>
-              <div style={{padding:"12px 18px", display:"flex", flexDirection:"column", gap:8}}>
+              <div style={{padding:"12px 16px", display:"flex", flexDirection:"column", gap:10}}>
                 {sortedTrips.map((t, i) => (
                   <TripCard key={t.id} trip={t} delay={i * 0.05}
                     onDelete={id => setTrips(p => p.filter(x => x.id !== id))}/>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* ══ INSIGHTS ═══════════════════════════════════════ */}
-          {tab === "insights" && (
-            <InsightsTab
-              trips={trips} allItems={allItems} staples={staples}
-              catTotals={catTotals} byMember={byMember}
-              cashbackYTD={cashbackYTD} yearItems={yearItems}
-              totalSaved={totalSaved} kirklandEst={kirklandEst}
-              animKey={animKey}/>
           )}
 
         </div>

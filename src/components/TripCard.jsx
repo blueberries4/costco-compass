@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BLUE, BORDER, CARD, CAT_ICON, GOLD, GREEN, MUTED, RED, SOFT, TEXT } from "../constants";
+import { BLUE, BORDER, CARD, CAT_ICON, FONT, GOLD, GREEN, MUTED, RED, SOFT, TEXT, TYPO } from "../constants";
 import { calcCashback, fmt, relDate, tripScore } from "../helpers";
 import { Pill } from "./atoms";
 import TripScoreBadge from "./TripScoreBadge";
@@ -20,22 +20,21 @@ export default function TripCard({trip, delay=0, onDelete}) {
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:10}}>
           <div style={{flex:1, minWidth:0}}>
             <div style={{display:"flex", alignItems:"center", gap:5, marginBottom:3, flexWrap:"wrap"}}>
-              <span style={{fontSize:10, color:MUTED}}>{relDate(trip.date)}</span>
-              <span style={{fontSize:9, color:MUTED, background:SOFT, padding:"1px 6px", borderRadius:20}}>
+              <span style={{...TYPO.caption, color:MUTED, fontFamily:FONT}}>{relDate(trip.date)}</span>
+              <span style={{...TYPO.badge, color:MUTED, background:SOFT, padding:"1px 6px", borderRadius:20, fontFamily:FONT}}>
                 {trip.addedBy === "Partner" ? "🙋‍♀️" : "🙋‍♂️"} {trip.addedBy}
               </span>
-              <span style={{fontSize:9, color:MUTED}}>· auto-imported</span>
+              <span style={{...TYPO.badge, color:MUTED, fontFamily:FONT}}>· auto-imported</span>
             </div>
-            <div style={{fontSize:14, fontWeight:600, color:TEXT,
-              fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.2px",
+            <div style={{...TYPO.cardTitle, color:TEXT, fontFamily:FONT,
               overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
               {trip.notes || "Costco Run"}
             </div>
           </div>
           <div style={{textAlign:"right", flexShrink:0}}>
-            <div style={{fontSize:16, fontWeight:600, color:TEXT, fontFamily:"'DM Mono',monospace"}}>{fmt(total)}</div>
-            <div style={{fontSize:9, color:GOLD, marginTop:1}}>+{fmt(cb)} back</div>
-            {saved > 0 && <div style={{fontSize:9, color:GREEN}}>saved {fmt(saved)}</div>}
+            <div style={{...TYPO.sectionTitle, color:TEXT, fontFamily:FONT}}>{fmt(total)}</div>
+            <div style={{...TYPO.badge, color:GOLD, marginTop:1, fontFamily:FONT}}>+{fmt(cb)} back</div>
+            {saved > 0 && <div style={{...TYPO.badge, color:GREEN, fontFamily:FONT}}>saved {fmt(saved)}</div>}
           </div>
         </div>
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:9}}>
@@ -60,20 +59,20 @@ export default function TripCard({trip, delay=0, onDelete}) {
                 <div style={{display:"flex", alignItems:"center", gap:7, minWidth:0}}>
                   <span style={{fontSize:13}}>{CAT_ICON[it.category]}</span>
                   <div style={{minWidth:0}}>
-                    <div style={{fontSize:12, fontWeight:500, color:TEXT,
+                    <div style={{...TYPO.cardBody, fontWeight:500, color:TEXT, fontFamily:FONT,
                       overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{it.name}</div>
                     <div style={{display:"flex", gap:4, marginTop:1}}>
-                      {!it.planned && <span style={{fontSize:9, color:RED, fontWeight:500}}>IMPULSE</span>}
-                      {it.kirkland && <span style={{fontSize:9, color:"#8B5CF6", fontWeight:500}}>KIRKLAND</span>}
+                      {!it.planned && <span style={{...TYPO.badge, color:RED, fontWeight:600, fontFamily:FONT}}>IMPULSE</span>}
+                      {it.kirkland && <span style={{...TYPO.badge, color:"#8B5CF6", fontWeight:600, fontFamily:FONT}}>KIRKLAND</span>}
                     </div>
                   </div>
                 </div>
                 <div style={{textAlign:"right", flexShrink:0}}>
-                  <div style={{fontSize:11, fontWeight:500, fontFamily:"'DM Mono',monospace", color:TEXT}}>
+                  <div style={{...TYPO.cardMeta, fontWeight:500, color:TEXT, fontFamily:FONT}}>
                     {fmt(it.amount)}
                   </div>
                   {it.retailPrice && it.retailPrice > it.amount && (
-                    <div style={{fontSize:9, color:GREEN}}>saved {fmt(it.retailPrice - it.amount)}</div>
+                    <div style={{...TYPO.badge, color:GREEN, fontFamily:FONT}}>saved {fmt(it.retailPrice - it.amount)}</div>
                   )}
                 </div>
               </div>
@@ -82,7 +81,7 @@ export default function TripCard({trip, delay=0, onDelete}) {
           <div style={{padding:"8px 15px", display:"flex", justifyContent:"flex-end"}}>
             <button className="tap" onClick={() => onDelete(trip.id)}
               style={{background:"none", border:`1px solid ${BORDER}`, color:MUTED, padding:"4px 11px",
-                borderRadius:50, fontSize:10, cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                borderRadius:50, ...TYPO.caption, cursor:"pointer", fontFamily:FONT}}>
               Remove
             </button>
           </div>

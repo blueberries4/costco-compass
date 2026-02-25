@@ -1,4 +1,4 @@
-import { AMBER, BLUE, CARD, GREEN, MUTED, RED, SOFT, TEXT, CAT_ICON } from "../constants";
+import { AMBER, BLUE, CARD, GREEN, MUTED, RED, SOFT, TEXT, CAT_ICON, BORDER } from "../constants";
 
 // Fallback suggestions for new users with no history
 const FALLBACK_SUGGESTIONS = [
@@ -112,69 +112,72 @@ export default function NudgeCard({ staples = [], allItems = [], onAddToList, an
 
   return (
     <div style={{
-      background: CARD,
-      borderRadius: 14,
-      padding: "14px 15px",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-      animation: `fadeUp 0.28s ${animDelay}s ease both`,
+      background: "#fff",
+      borderRadius: 10,
+      overflow: "hidden",
+      border: `1px solid ${BORDER}`,
+      animation: `fadeUp 0.25s ${animDelay}s ease both`,
     }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 16 }}>💡</span>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>Quick Add Suggestions</div>
-            <div style={{ fontSize: 10, color: MUTED }}>Based on your buying patterns</div>
-          </div>
+      {/* Header - Costco style */}
+      <div style={{ 
+        padding: "12px 14px",
+        borderBottom: `1px solid ${BORDER}`,
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center"
+      }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Suggested for You</div>
+          <div style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>Based on your history</div>
         </div>
         <div style={{
-          fontSize: 9,
-          color: GREEN,
-          fontWeight: 500,
-          background: `${GREEN}12`,
-          padding: "3px 8px",
-          borderRadius: 10,
+          fontSize: 12,
+          color: BLUE,
+          fontWeight: 600,
+          cursor: "pointer",
         }}>
-          Tap to add
+          View all
         </div>
       </div>
 
-      {/* Suggestion grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      {/* Suggestion list - cleaner vertical layout */}
+      <div style={{ padding: "8px 0" }}>
         {allSuggestions.map((item, i) => (
           <div
             key={`${item.name}-${i}`}
-            className="tap lift"
+            className="tap"
             onClick={() => onAddToList?.(item)}
             style={{
-              background: item.type === "staple" ? `${priorityColor[item.priority]}08` : SOFT,
-              border: item.type === "staple" ? `1px solid ${priorityColor[item.priority]}20` : "1px solid transparent",
-              borderRadius: 11,
-              padding: "10px 11px",
+              padding: "10px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
               cursor: "pointer",
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              borderBottom: i < allSuggestions.length - 1 ? `1px solid ${BORDER}` : "none",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 15 }}>{item.icon}</span>
-              <span style={{
-                fontSize: 8,
-                fontWeight: 600,
-                color: typeBg[item.type],
-                background: `${typeBg[item.type]}12`,
-                padding: "2px 5px",
-                borderRadius: 4,
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
+            <span style={{ fontSize: 24 }}>{item.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>
+                {item.name}
+              </div>
+              <div style={{ 
+                fontSize: 12, 
+                color: item.type === "staple" ? RED : MUTED,
+                marginTop: 2 
               }}>
-                {typeLabel[item.type]}
-              </span>
+                {item.reason}
+              </div>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: TEXT, lineHeight: 1.3, marginBottom: 2 }}>
-              {item.name}
-            </div>
-            <div style={{ fontSize: 9, color: item.type === "staple" ? priorityColor[item.priority] : MUTED }}>
-              {item.reason}
+            <div style={{
+              background: item.type === "staple" ? RED : BLUE,
+              color: "#fff",
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "6px 12px",
+              borderRadius: 6,
+            }}>
+              Add
             </div>
           </div>
         ))}
@@ -182,62 +185,29 @@ export default function NudgeCard({ staples = [], allItems = [], onAddToList, an
 
       {/* Restock all button - only show if there are overdue staples */}
       {overdueStaples.length > 0 && (
-        <div
-          className="tap"
-          onClick={() => {
-            overdueStaples.forEach(item => onAddToList?.(item));
-          }}
-          style={{
-            marginTop: 10,
-            background: `linear-gradient(135deg, ${RED}12, ${AMBER}08)`,
-            border: `1px solid ${RED}18`,
-            borderRadius: 10,
-            padding: "10px 12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            cursor: "pointer",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 14 }}>🔄</span>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: RED }}>
-                Restock {overdueStaples.length} staple{overdueStaples.length !== 1 ? "s" : ""}
-              </div>
-              <div style={{ fontSize: 9, color: MUTED }}>
-                Add all overdue items to your list
-              </div>
-            </div>
-          </div>
-          <div style={{
-            background: RED,
-            color: "#fff",
-            fontSize: 10,
-            fontWeight: 600,
-            padding: "5px 10px",
-            borderRadius: 8,
-          }}>
-            + Add all
+        <div style={{ padding: "8px 14px 14px", borderTop: `1px solid ${BORDER}` }}>
+          <div
+            className="tap"
+            onClick={() => {
+              overdueStaples.forEach(item => onAddToList?.(item));
+            }}
+            style={{
+              background: RED,
+              borderRadius: 8,
+              padding: "12px 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              gap: 8,
+            }}
+          >
+            <span style={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+              Restock All ({overdueStaples.length})
+            </span>
           </div>
         </div>
       )}
-
-      {/* See all link */}
-      <div
-        className="tap"
-        style={{
-          marginTop: 10,
-          textAlign: "center",
-          fontSize: 11,
-          color: BLUE,
-          fontWeight: 500,
-          cursor: "pointer",
-          padding: "6px 0",
-        }}
-      >
-        See all suggestions →
-      </div>
     </div>
   );
 }

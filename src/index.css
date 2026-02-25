@@ -1,5 +1,11 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;background:#E2DCD4;font-family:'Plus Jakarta Sans',sans-serif;}
+html,body{
+  height:100%;
+  background:#F4F4F4;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 ::-webkit-scrollbar{display:none;}
 
 @keyframes fadeUp {
@@ -44,6 +50,11 @@ html,body{height:100%;background:#E2DCD4;font-family:'Plus Jakarta Sans',sans-se
   box-shadow:0 8px 22px rgba(0,0,0,0.1)!important;
 }
 
+@keyframes spin {
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
 .fbar{
   animation:fillBar 0.82s cubic-bezier(.34,1.1,.64,1) both;
 }
@@ -61,7 +72,7 @@ input[type=number]::-webkit-inner-spin-button{
   -webkit-appearance:none;
 }
 input[type=checkbox]{
-  accent-color:#D92B3A;
+  accent-color:#005DAA;
   width:17px;
   height:17px;
   cursor:pointer;

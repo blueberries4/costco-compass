@@ -1,14 +1,69 @@
-export const RED    = "#D92B3A";
-export const BLUE   = "#005DAA";
-export const GREEN  = "#16a34a";
-export const AMBER  = "#d97706";
-export const GOLD   = "#A07800";
-export const BG     = "#F0EBE2";
-export const CARD   = "#FFFFFF";
-export const TEXT   = "#1C1712";
-export const MUTED  = "#9A8E84";
-export const SOFT   = "#F4F0EA";
-export const BORDER = "rgba(0,0,0,0.07)";
+/* ═══════════════════════════════════════════════════════════════
+   COSTCO COMPASS — Design Tokens (In-App Experience)
+   Styled to match native Costco app screens
+   ═══════════════════════════════════════════════════════════════ */
+
+// Official Costco Brand Colors
+export const RED = "#E31837";           // Costco primary red
+export const BLUE = "#005DAA";          // Costco blue (headers, links)
+export const DARK_BLUE = "#003B73";     // Costco dark blue
+export const GREEN = "#1D7D1D";         // Success/savings green
+export const GOLD = "#C5A000";          // Executive gold
+export const AMBER = "#E87722";         // Warning orange
+
+// UI Colors (matching Costco app exactly)
+export const BG = "#FFFFFF";            // White background
+export const CARD = "#FFFFFF";          // White cards
+export const SOFT = "#F5F5F5";          // Light gray backgrounds (Costco app gray)
+export const TEXT = "#333333";          // Costco text color
+export const MUTED = "#666666";         // Secondary text
+export const LIGHT_TEXT = "#999999";    // Tertiary text
+export const BORDER = "#E5E5E5";        // Border color
+export const DIVIDER = "#EEEEEE";       // Divider lines
+
+// ═══════════════════════════════════════════════════════════════
+// TYPOGRAPHY SYSTEM - Mobile First, Costco Style
+// ═══════════════════════════════════════════════════════════════
+export const FONT = "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif";
+
+// Font Sizes (mobile-first scale)
+export const TYPO = {
+  // Page headers
+  pageTitle: { fontSize: 20, fontWeight: 700, letterSpacing: -0.3 },
+  pageSubtitle: { fontSize: 13, fontWeight: 500 },
+  
+  // Section headers
+  sectionTitle: { fontSize: 16, fontWeight: 700, letterSpacing: -0.2 },
+  sectionSubtitle: { fontSize: 12, fontWeight: 500 },
+  
+  // Card content
+  cardTitle: { fontSize: 15, fontWeight: 600 },
+  cardBody: { fontSize: 13, fontWeight: 400 },
+  cardMeta: { fontSize: 11, fontWeight: 500 },
+  
+  // Labels & badges
+  label: { fontSize: 11, fontWeight: 600, letterSpacing: 0.3 },
+  badge: { fontSize: 10, fontWeight: 700, letterSpacing: 0.5 },
+  overline: { fontSize: 10, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase" },
+  
+  // Numbers & stats
+  statLarge: { fontSize: 24, fontWeight: 800, letterSpacing: -0.5 },
+  statMedium: { fontSize: 18, fontWeight: 700, letterSpacing: -0.3 },
+  statSmall: { fontSize: 14, fontWeight: 600 },
+  
+  // Buttons
+  buttonLarge: { fontSize: 15, fontWeight: 700 },
+  buttonMedium: { fontSize: 13, fontWeight: 600 },
+  buttonSmall: { fontSize: 11, fontWeight: 600 },
+  
+  // Body text
+  body: { fontSize: 14, fontWeight: 400, lineHeight: 1.4 },
+  bodySmall: { fontSize: 12, fontWeight: 400, lineHeight: 1.4 },
+  caption: { fontSize: 11, fontWeight: 400 },
+  
+  // Navigation
+  navLabel: { fontSize: 10, fontWeight: 500 },
+};
 
 export const CAT_COLOR = {
   Groceries:"#F59E0B", Household:"#3B82F6", Gas:"#D92B3A",

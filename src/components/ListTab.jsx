@@ -1,83 +1,83 @@
-import { useState } from "react";
-import { Card, CardTitle } from "./atoms";
+import { useState, useEffect } from "react";
 import {
   AMBER,
   BLUE,
   BORDER,
   CARD,
-  CAT_COLOR,
   CAT_ICON,
   CATS,
+  FONT,
   GREEN,
-  MEMBER,
   MUTED,
   RED,
   SOFT,
   TEXT,
+  TYPO,
   WAREHOUSES,
   WAREHOUSE_STOCK,
 } from "../constants";
 import { relDate } from "../helpers";
-import { listApi, wishlistApi } from "../api/mockApi";
+import { listApi } from "../api/mockApi";
 
-export default function ListTab({staples, trips, wishlist, setWishlist, list, setList, animKey}) {
+export default function ListTab({staples, trips, list, setList, animKey}) {
   const [newItem, setNewItem] = useState("");
   const [newCat, setNewCat] = useState("Groceries");
-  const [wishOpen, setWishOpen] = useState(false);
   const [warehouse, setWarehouse] = useState(WAREHOUSES[0].id);
-  const [showAddWish, setShowAddWish] = useState(false);
-  const [nw, setNw] = useState({name:"", category:"Electronics", note:"", addedBy:MEMBER.household[0]});
+  const [toast, setToast] = useState(null);
+
+  // Auto-hide toast after 2 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const checked = list.filter(i => i.checked).length;
   const total = list.length;
 
   const addToList = async () => {
     if(!newItem.trim()) return;
+    // Check if already in list
+    if(list.find(i => i.name.toLowerCase() === newItem.trim().toLowerCase())) {
+      setToast({ message: "Item already in list", type: "info" });
+      return;
+    }
     const item = {name:newItem.trim(), category:newCat, checked:false, source:"manual"};
     const res = await listApi.addItem(item);
-    if(res.success) setList(p => [...p, res.data]);
+    if(res.success) {
+      setList(p => [...p, res.data]);
+      setToast({ message: `Added ${newItem.trim()}`, type: "success" });
+    }
     setNewItem("");
   };
+  
   const addFromSuggestion = async (s) => {
-    if(list.find(i => i.name.toLowerCase() === s.name.toLowerCase())) return;
+    if(list.find(i => i.name.toLowerCase() === s.name.toLowerCase())) {
+      setToast({ message: "Item already in list", type: "info" });
+      return;
+    }
     const item = {name:s.name, category:s.category, checked:false, source:"suggested"};
     const res = await listApi.addItem(item);
-    if(res.success) setList(p => [...p, res.data]);
+    if(res.success) {
+      setList(p => [...p, res.data]);
+      setToast({ message: `Added ${s.name}`, type: "success" });
+    }
   };
-  const addFromWishlist = async (item) => {
-    if(list.find(i => i.name.toLowerCase() === item.name.toLowerCase())) return;
-    const newItem = {name:item.name, category:item.category, checked:false, source:"wishlist"};
-    const res = await listApi.addItem(newItem);
-    if(res.success) setList(p => [...p, res.data]);
-  };
-  const saveToWishlist = async (s) => {
-    if(wishlist.find(i => i.name.toLowerCase() === s.name.toLowerCase())) return;
-    const item = {name:s.name, category:s.category, note:"", addedBy:MEMBER.household[0]};
-    const res = await wishlistApi.create(item);
-    if(res.success) setWishlist(p => [...p, res.data]);
-  };
+  
   const toggle = async (id) => {
     const res = await listApi.toggleItem(id);
     if(res.success) setList(p => p.map(i => i.id === id ? res.data : i));
   };
+  
   const remove = async (id) => {
     const res = await listApi.removeItem(id);
     if(res.success) setList(p => p.filter(i => i.id !== id));
   };
+  
   const clearDone = async () => {
     const res = await listApi.clearChecked();
     if(res.success) setList(p => p.filter(i => !i.checked));
-  };
-  const saveWish = async () => {
-    if(!nw.name.trim()) return;
-    const res = await wishlistApi.create({...nw, name:nw.name.trim()});
-    if(res.success) setWishlist(p => [...p, res.data]);
-    setNw({name:"", category:"Electronics", note:"", addedBy:MEMBER.household[0]});
-    setShowAddWish(false);
-  };
-  const removeWish = async (id) => {
-    const res = await wishlistApi.delete(id);
-    if(res.success) setWishlist(p => p.filter(i => i.id !== id));
   };
 
   const stockBadge = name => {
@@ -88,272 +88,187 @@ export default function ListTab({staples, trips, wishlist, setWishlist, list, se
     return {label:"Out of Stock", col:RED};
   };
 
+  const curWarehouse = WAREHOUSES.find(w => w.id === warehouse)?.name || "";
+  const borderStyle = "1px solid " + BORDER;
+
   return (
-    <div key={`l-${animKey}`}>
-      {/* Header */}
-      <div style={{background:"linear-gradient(145deg,#F5F9FF,#EFF4FF)",
-        padding:"24px 20px 14px", position:"relative", overflow:"hidden"}}>
-        <div style={{position:"absolute", top:-28, right:-28, width:88, height:88,
-          borderRadius:"50%", background:`${BLUE}07`}}/>
-        <div style={{position:"relative", display:"flex", justifyContent:"space-between", alignItems:"flex-end"}}>
-          <div>
-            <div style={{fontSize:9, fontWeight:500, color:MUTED, letterSpacing:"0.08em", marginBottom:3,
-              textTransform:"uppercase"}}>NEXT TRIP</div>
-            <div style={{fontSize:22, fontWeight:700, color:TEXT,
-              fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.3px", lineHeight:1}}>Your List</div>
-            {total > 0 && <div style={{fontSize:10, color:MUTED, marginTop:3}}>{checked}/{total} checked off</div>}
+    <div key={"l-" + animKey}>
+      <div style={{background:BLUE, padding:"14px 16px"}}>
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+          <div style={{color:"#fff"}}>
+            <div style={{...TYPO.pageTitle, fontFamily:FONT}}>
+              Shopping List
+            </div>
           </div>
           {total > 0 && (
-            <div style={{position:"relative", width:48, height:48}}>
-              <svg viewBox="0 0 36 36" style={{transform:"rotate(-90deg)", width:"100%", height:"100%"}}>
-                <circle cx="18" cy="18" r="15" fill="none" stroke={SOFT} strokeWidth="3"/>
-                <circle cx="18" cy="18" r="15" fill="none" stroke={checked === total ? GREEN : BLUE} strokeWidth="3"
-                  strokeDasharray={`${(checked/total)*94} 94`}
-                  strokeLinecap="round"/>
-              </svg>
-              <div style={{
-                position:"absolute", top:"50%", left:"50%", transform:"translate(-50%, -50%)",
-                fontSize: checked === total ? 14 : 11,
-                fontWeight:700,
-                color: checked === total ? GREEN : BLUE,
-                fontFamily:"'Barlow Condensed',sans-serif",
-              }}>
-                {checked === total ? "✓" : `${Math.round((checked/total)*100)}%`}
+            <div style={{display:"flex", alignItems:"center", gap:10}}>
+              <div style={{textAlign:"right", color:"#fff"}}>
+                <div style={{...TYPO.statMedium, fontFamily:FONT}}>{checked}/{total}</div>
+                <div style={{...TYPO.caption, opacity:0.8, fontFamily:FONT}}>items</div>
+              </div>
+              <div style={{position:"relative", width:40, height:40}}>
+                <svg viewBox="0 0 36 36" style={{transform:"rotate(-90deg)", width:"100%", height:"100%"}}>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="#fff" strokeWidth="3"
+                    strokeDasharray={(checked/total)*94 + " 94"}
+                    strokeLinecap="round"/>
+                </svg>
+                <div style={{position:"absolute", top:"50%", left:"50%", transform:"translate(-50%, -50%)",
+                  ...TYPO.caption, fontWeight:600, color:"#fff", fontFamily:FONT}}>
+                  {checked === total ? "✓" : Math.round((checked/total)*100)+"%"}
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div style={{padding:"12px 18px", display:"flex", flexDirection:"column", gap:10}}>
-        {/* Add item */}
-        <div style={{display:"flex", gap:6}}>
-          <input type="text" placeholder="Add item to list…" value={newItem}
+      <div style={{padding:"12px 16px", display:"flex", flexDirection:"column", gap:10, background:SOFT}}>
+        <div style={{display:"flex", gap:8}}>
+          <input type="text" placeholder="Add item…" value={newItem}
             onChange={e => setNewItem(e.target.value)} onKeyDown={e => e.key === "Enter" && addToList()}
-            style={{flex:1, background:CARD, border:`1.5px solid ${BORDER}`, borderRadius:11,
-              padding:"10px 13px", fontSize:13, color:TEXT, fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
+            style={{flex:1, background:CARD, border:borderStyle, borderRadius:8,
+              padding:"10px 12px", ...TYPO.body, color:TEXT, fontFamily:FONT}}/>
           <select value={newCat} onChange={e => setNewCat(e.target.value)}
-            style={{background:CARD, border:`1.5px solid ${BORDER}`, borderRadius:11, padding:"0 8px",
-              fontSize:12, color:TEXT, cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+            style={{background:CARD, border:borderStyle, borderRadius:8, padding:"0 10px",
+              ...TYPO.cardBody, color:TEXT, cursor:"pointer", fontFamily:FONT}}>
             {CATS.map(c => <option key={c} value={c}>{CAT_ICON[c]} {c}</option>)}
           </select>
           <button className="tap" onClick={addToList}
-            style={{background:RED, color:"#fff", border:"none", borderRadius:11, padding:"0 13px",
-              fontSize:17, cursor:"pointer", flexShrink:0, boxShadow:`0 2px 8px ${RED}38`}}>+</button>
+            style={{background:RED, color:"#fff", border:"none", borderRadius:8, padding:"0 14px",
+              fontSize:18, fontWeight:600, cursor:"pointer"}}>+</button>
         </div>
 
-        {/* Smart suggestions */}
+        <div style={{background:"#fff", borderRadius:8, padding:"10px 12px", border:borderStyle}}>
+          <div style={{...TYPO.cardMeta, color:MUTED, marginBottom:6, fontFamily:FONT}}>Check stock at warehouse:</div>
+          <div style={{display:"flex", gap:6}}>
+            {WAREHOUSES.map(w => (
+              <button key={w.id} className="tap" onClick={() => setWarehouse(w.id)}
+                style={{border:"none", cursor:"pointer", padding:"6px 12px", borderRadius:6, 
+                  ...TYPO.cardBody,
+                  background: warehouse === w.id ? BLUE : "#F5F5F5",
+                  color: warehouse === w.id ? "#fff" : MUTED,
+                  fontWeight: warehouse === w.id ? 600 : 400,
+                  fontFamily:FONT, transition:"all 0.15s"}}>
+                {w.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {staples.filter(s => s.duePct >= 65).length > 0 && (
-          <Card animDelay={0.04}>
-            <CardTitle sub="Based on your purchase history">🔮 Probably running low</CardTitle>
-            {staples.filter(s => s.duePct >= 65).slice(0, 5).map((s, i) => {
+          <div style={{background:"#fff", borderRadius:10, border:borderStyle, overflow:"hidden"}}>
+            <div style={{padding:"12px 14px", borderBottom:borderStyle}}>
+              <div style={{...TYPO.cardTitle, color:TEXT, fontFamily:FONT}}>🔮 Probably running low</div>
+              <div style={{...TYPO.cardMeta, color:MUTED, marginTop:2, fontFamily:FONT}}>Based on your purchase history</div>
+            </div>
+            {staples.filter(s => s.duePct >= 65).slice(0, 4).map((s, i) => {
               const onList = !!list.find(x => x.name.toLowerCase() === s.name.toLowerCase());
-              const onWish = !!wishlist.find(x => x.name.toLowerCase() === s.name.toLowerCase());
+              const cnt = staples.filter(x => x.duePct >= 65).length;
               return (
-                <div key={s.name} style={{display:"flex", alignItems:"center", gap:8,
-                  padding:"7px 0", borderBottom: i < Math.min(staples.filter(x => x.duePct >= 65).length, 5) - 1 ? `1px solid ${BORDER}` : "none",
-                  animation:`fadeUp 0.24s ${0.05 + i * 0.04}s ease both`}}>
-                  <span style={{fontSize:15}}>{CAT_ICON[s.category]}</span>
+                <div key={s.name} style={{display:"flex", alignItems:"center", gap:10,
+                  padding:"10px 14px",
+                  borderBottom: i < Math.min(cnt, 4) - 1 ? borderStyle : "none"}}>
+                  <span style={{fontSize:16}}>{CAT_ICON[s.category]}</span>
                   <div style={{flex:1, minWidth:0}}>
-                    <div style={{fontSize:12, fontWeight:500, color:TEXT,
-                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{s.name}</div>
-                    <div style={{fontSize:10, color:MUTED}}>{relDate(s.lastBought)} · every ~{s.avgGap}d</div>
+                    <div style={{...TYPO.cardBody, fontWeight:500, color:TEXT, fontFamily:FONT}}>{s.name}</div>
+                    <div style={{...TYPO.cardMeta, color:MUTED, fontFamily:FONT}}>{relDate(s.lastBought)} · every ~{s.avgGap}d</div>
                   </div>
-                  <div style={{display:"flex", gap:4, flexShrink:0}}>
-                    <button className="tap" onClick={() => addFromSuggestion(s)}
-                      style={{background: onList ? GREEN+"14" : BLUE+"12", color: onList ? GREEN : BLUE,
-                        border:"none", borderRadius:20, padding:"4px 8px", fontSize:10, fontWeight:600,
-                        cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                      {onList ? "✓" : "+ List"}
-                    </button>
-                    {!onList && (
-                      <button className="tap" onClick={() => saveToWishlist(s)}
-                        style={{background: onWish ? "#8B5CF610" : SOFT,
-                          color: onWish ? "#8B5CF6" : MUTED,
-                          border:"none", borderRadius:20, padding:"4px 8px", fontSize:10,
-                          cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                        {onWish ? "★" : "☆"}
-                      </button>
-                    )}
-                  </div>
+                  <button className="tap" onClick={() => addFromSuggestion(s)}
+                    style={{background: onList ? GREEN : BLUE, color:"#fff",
+                      border:"none", borderRadius:6, padding:"6px 12px", 
+                      ...TYPO.cardMeta, fontWeight:600,
+                      cursor:"pointer", fontFamily:FONT}}>
+                    {onList ? "✓ Added" : "+ Add"}
+                  </button>
                 </div>
               );
             })}
-          </Card>
+          </div>
         )}
 
-        {/* Current list */}
         {list.length > 0 ? (
-          <Card animDelay={0.08} style={{padding:0, overflow:"hidden"}}>
-            <div style={{padding:"10px 14px 8px", borderBottom:`1px solid ${BORDER}`,
+          <div style={{background:"#fff", borderRadius:10, border:borderStyle, overflow:"hidden"}}>
+            <div style={{padding:"10px 14px", borderBottom:borderStyle,
               display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-              <span style={{fontSize:11, color:MUTED}}>{total} item{total !== 1 ? "s" : ""}</span>
+              <span style={{...TYPO.cardBody, fontWeight:500, color:TEXT, fontFamily:FONT}}>Your List</span>
               {checked > 0 && (
                 <button className="tap" onClick={clearDone}
-                  style={{fontSize:10, color:MUTED, background:"none", border:`1px solid ${BORDER}`,
-                    borderRadius:20, padding:"3px 9px", cursor:"pointer",
-                    fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
+                  style={{...TYPO.cardMeta, color:MUTED, background:"#F5F5F5", border:"none",
+                    borderRadius:6, padding:"4px 10px", cursor:"pointer", fontFamily:FONT}}>
                   Clear done ({checked})
                 </button>
               )}
             </div>
             {list.map((item, i) => {
+              const sb = stockBadge(item.name);
               return (
                 <div key={item.id} style={{display:"flex", alignItems:"center", gap:10,
-                  padding:"10px 14px",
-                  borderBottom: i < list.length - 1 ? `1px solid ${BORDER}` : "none",
-                  background: item.checked ? GREEN+"04" : "transparent", transition:"background 0.2s"}}>
-                  <input type="checkbox" checked={item.checked} onChange={() => toggle(item.id)}/>
-                  <span style={{fontSize:14}}>{CAT_ICON[item.category]}</span>
+                  padding:"12px 14px", borderBottom: i < list.length - 1 ? borderStyle : "none",
+                  background: item.checked ? GREEN+"06" : "transparent", transition:"background 0.2s"}}>
+                  <input type="checkbox" checked={item.checked} onChange={() => toggle(item.id)}
+                    style={{width:20, height:20, cursor:"pointer"}}/>
+                  <span style={{fontSize:16}}>{CAT_ICON[item.category]}</span>
                   <div style={{flex:1, minWidth:0}}>
-                    <div style={{fontSize:12, fontWeight:500,
-                      color: item.checked ? MUTED : TEXT,
-                      textDecoration: item.checked ? "line-through" : "none",
-                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
-                      {item.name}
-                    </div>
-                    {item.source && item.source !== "manual" && (
-                      <div style={{fontSize:9, color: item.source === "wishlist" ? "#8B5CF6" : BLUE, marginTop:1}}>
-                        {item.source === "wishlist" ? "⭐ from wishlist" : "🔮 suggested"}
+                    <div style={{...TYPO.body, fontWeight:500, color: item.checked ? MUTED : TEXT, fontFamily:FONT,
+                      textDecoration: item.checked ? "line-through" : "none"}}>{item.name}</div>
+                    {sb && (
+                      <div style={{marginTop:3}}>
+                        <span style={{...TYPO.caption, fontWeight:600, color:sb.col,
+                          background:sb.col+"12", padding:"2px 8px", borderRadius:4, fontFamily:FONT}}>
+                          {sb.label} at {curWarehouse}
+                        </span>
                       </div>
+                    )}
+                    {item.source && item.source !== "manual" && !sb && (
+                      <div style={{...TYPO.caption, color:BLUE, marginTop:2, fontFamily:FONT}}>🔮 suggested</div>
                     )}
                   </div>
                   <button className="tap" onClick={() => remove(item.id)}
-                    style={{background:"none", border:"none", color:MUTED, fontSize:14,
-                      cursor:"pointer", padding:"2px 5px"}}>✕</button>
+                    style={{background:"none", border:"none", color:MUTED, fontSize:16,
+                      cursor:"pointer", padding:"4px"}}>✕</button>
                 </div>
               );
             })}
-          </Card>
+          </div>
         ) : (
-          <div style={{textAlign:"center", padding:"24px 20px", color:MUTED,
-            animation:"fadeUp 0.3s 0.1s ease both"}}>
-            <div style={{fontSize:30, marginBottom:8}}>📋</div>
-            <div style={{fontSize:13, fontWeight:500}}>Your list is empty</div>
-            <div style={{fontSize:11, marginTop:3}}>Add items or accept a suggestion</div>
+          <div style={{textAlign:"center", padding:"32px 20px", color:MUTED,
+            background:"#fff", borderRadius:10, border:borderStyle}}>
+            <div style={{fontSize:36, marginBottom:10}}>📋</div>
+            <div style={{...TYPO.cardTitle, color:TEXT, fontFamily:FONT}}>Your list is empty</div>
+            <div style={{...TYPO.cardBody, marginTop:4, color:MUTED, fontFamily:FONT}}>Add items above or accept suggestions</div>
           </div>
         )}
-
-        {/* Wishlist section */}
-        <div style={{background:CARD, borderRadius:16, overflow:"hidden",
-          boxShadow:"0 2px 8px rgba(0,0,0,0.05)", animation:"fadeUp 0.3s 0.12s ease both"}}>
-
-          {/* Warehouse picker row */}
-          <div style={{padding:"12px 14px 10px", borderBottom:`1px solid ${BORDER}`}}>
-            <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8}}>
-              <div style={{fontSize:12, fontWeight:600, color:TEXT}}>⭐ Wishlist</div>
-              <div style={{display:"flex", gap:5}}>
-                <button className="tap" onClick={() => setShowAddWish(true)}
-                  style={{background:RED+"12", color:RED, border:"none", borderRadius:20, padding:"3px 9px",
-                    fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                  + Add
-                </button>
-                <button className="tap" onClick={() => setWishOpen(o => !o)}
-                  style={{background:SOFT, border:"none", color:MUTED, borderRadius:20, padding:"3px 9px",
-                    fontSize:10, cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                  {wishOpen ? "Hide" : "Show all"}
-                </button>
-              </div>
-            </div>
-            {/* Warehouse toggle */}
-            <div style={{display:"flex", gap:4}}>
-              <span style={{fontSize:9, color:MUTED, marginRight:2, alignSelf:"center"}}>Stock at:</span>
-              {WAREHOUSES.map(w => (
-                <button key={w.id} className="tap" onClick={() => setWarehouse(w.id)}
-                  style={{border:"none", cursor:"pointer", padding:"3px 8px", borderRadius:20, fontSize:10,
-                    background: warehouse === w.id ? BLUE+"18" : SOFT,
-                    color: warehouse === w.id ? BLUE : MUTED,
-                    fontWeight: warehouse === w.id ? 600 : 400,
-                    fontFamily:"'Plus Jakarta Sans',sans-serif", transition:"all 0.13s"}}>
-                  {w.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Wishlist items */}
-          {(wishOpen ? wishlist : wishlist.slice(0, 3)).map((item, i) => {
-            const sb = stockBadge(item.name);
-            const onList = !!list.find(x => x.name.toLowerCase() === item.name.toLowerCase());
-            return (
-              <div key={item.id} style={{display:"flex", alignItems:"center", gap:9,
-                padding:"10px 14px", borderBottom:`1px solid ${BORDER}`,
-                animation:`fadeUp 0.24s ${i * 0.04}s ease both`}}>
-                <span style={{fontSize:15}}>{CAT_ICON[item.category]}</span>
-                <div style={{flex:1, minWidth:0}}>
-                  <div style={{fontSize:12, fontWeight:500, color:TEXT,
-                    overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{item.name}</div>
-                  <div style={{display:"flex", gap:5, marginTop:2, alignItems:"center"}}>
-                    {sb && <span style={{fontSize:9, fontWeight:600, color:sb.col,
-                      background:sb.col+"12", padding:"1px 6px", borderRadius:20}}>{sb.label}</span>}
-                    <span style={{fontSize:9, color:MUTED}}>
-                      {item.addedBy === "Partner" ? "🙋‍♀️" : "🙋‍♂️"} {item.addedBy}
-                    </span>
-                  </div>
-                  {item.note && <div style={{fontSize:10, color:MUTED, marginTop:1}}>"{item.note}"</div>}
-                </div>
-                <div style={{display:"flex", flexDirection:"column", gap:4, flexShrink:0}}>
-                  <button className="tap" onClick={() => addFromWishlist(item)}
-                    style={{background: onList ? GREEN+"14" : BLUE+"12", color: onList ? GREEN : BLUE,
-                      border:"none", borderRadius:20, padding:"4px 8px", fontSize:10, fontWeight:600,
-                      cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif"}}>
-                    {onList ? "✓" : "+ Trip"}
-                  </button>
-                  <button className="tap" onClick={() => removeWish(item.id)}
-                    style={{background:"none", border:"none", color:MUTED, fontSize:9,
-                      cursor:"pointer", fontFamily:"'Plus Jakarta Sans',sans-serif", padding:"1px"}}>
-                    Remove
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-
-          {wishlist.length === 0 && (
-            <div style={{padding:"16px 14px", textAlign:"center", color:MUTED}}>
-              <div style={{fontSize:11}}>Nothing saved yet — add items you want eventually</div>
-            </div>
-          )}
-
-          {/* Add to wishlist form */}
-          {showAddWish && (
-            <div style={{padding:"12px 14px", borderTop:`1px solid ${BORDER}`,
-              background:SOFT, display:"flex", flexDirection:"column", gap:7}}>
-              <input type="text" placeholder="Item name" value={nw.name}
-                onChange={e => setNw(p => ({...p, name:e.target.value}))}
-                style={{width:"100%", background:CARD, border:`1.5px solid ${BORDER}`, borderRadius:10,
-                  padding:"9px 12px", fontSize:12, color:TEXT, fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
-              <input type="text" placeholder="Note (optional)" value={nw.note}
-                onChange={e => setNw(p => ({...p, note:e.target.value}))}
-                style={{width:"100%", background:CARD, border:`1.5px solid ${BORDER}`, borderRadius:10,
-                  padding:"9px 12px", fontSize:12, color:TEXT, fontFamily:"'Plus Jakarta Sans',sans-serif"}}/>
-              <div style={{display:"flex", gap:5, flexWrap:"wrap"}}>
-                {CATS.filter(c => c !== "Gas").map(c => (
-                  <button key={c} className="tap" onClick={() => setNw(p => ({...p, category:c}))}
-                    style={{border:"none", cursor:"pointer", padding:"3px 8px", borderRadius:20, fontSize:10,
-                      background: nw.category === c ? CAT_COLOR[c]+"20" : CARD,
-                      color: nw.category === c ? CAT_COLOR[c] : MUTED,
-                      fontFamily:"'Plus Jakarta Sans',sans-serif", transition:"all 0.12s"}}>
-                    {CAT_ICON[c]} {c}
-                  </button>
-                ))}
-              </div>
-              <div style={{display:"flex", gap:6}}>
-                <button className="tap" onClick={() => setShowAddWish(false)}
-                  style={{flex:1, padding:"9px", background:CARD, border:`1px solid ${BORDER}`,
-                    borderRadius:50, fontSize:12, color:MUTED, cursor:"pointer",
-                    fontFamily:"'Plus Jakarta Sans',sans-serif"}}>Cancel</button>
-                <button className="tap" onClick={saveWish}
-                  style={{flex:1, padding:"9px", background: nw.name.trim() ? RED : "#C5BDB5",
-                    border:"none", borderRadius:50, fontSize:12, fontWeight:600, color:"#fff",
-                    cursor: nw.name.trim() ? "pointer" : "default", fontFamily:"'Plus Jakarta Sans',sans-serif",
-                    transition:"background 0.18s"}}>Save</button>
-              </div>
-            </div>
-          )}
-        </div>
-
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{
+          position: "fixed",
+          bottom: 90,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: toast.type === "success" ? GREEN : BLUE,
+          color: "#fff",
+          padding: "12px 20px",
+          borderRadius: 10,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          animation: "fadeUp 0.2s ease both",
+          fontFamily: FONT,
+          maxWidth: "85%",
+        }}>
+          <span style={{ fontSize: 16 }}>
+            {toast.type === "success" ? "✓" : "ℹ"}
+          </span>
+          <span style={{ ...TYPO.cardBody, fontWeight: 600, fontFamily: FONT }}>
+            {toast.message}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
